@@ -1,5 +1,0 @@
-# Cloudflare Pages não exige este arquivo para app estático simples.
-# Ele fica aqui apenas como referência do projeto.
-name = "diario-bordo-trevo"
-pages_build_output_dir = "."
-compatibility_date = "2026-07-03"

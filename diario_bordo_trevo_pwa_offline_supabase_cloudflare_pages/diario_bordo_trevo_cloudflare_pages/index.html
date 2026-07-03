@@ -3,16 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Diário de Bordo Trevo | Diário de Bordo</title>
   <meta name="theme-color" content="#102E3A" />
-  <meta name="description" content="PWA offline com sincronização para passagem de turno e diário de bordo." />
+  <meta name="description" content="Diário de Bordo Trevo — PWA offline com sincronização Supabase." />
+  <title>Diário de Bordo Trevo</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="assets/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
 <body>
+  <noscript>Este aplicativo precisa de JavaScript para funcionar.</noscript>
   <div id="app"></div>
-  <div id="toast" class="toast hidden"></div>
-  <script src="assets/app.js"></script>
+  <div id="toast" class="toast" hidden></div>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/db.js"></script>
+  <script src="assets/js/supabase-rest.js"></script>
+  <script src="assets/js/app.js"></script>
 </body>
 </html>

@@ -1,54 +1,17 @@
-# Diário de Bordo Trevo — PWA Offline + Supabase + Cloudflare Pages
+# Diário de Bordo Trevo — Enterprise V1+V2+V3
 
-Aplicativo mobile-first para Diário de Bordo / Passagem de Turno da liderança.
+Aplicativo PWA para passagem de turno / diário de bordo da liderança, com Supabase e Cloudflare Pages.
 
-## Arquitetura
+## Conteúdo entregue
+- V1: login, usuários, setores, máquinas e formulário por setor/máquina.
+- V2: PWA offline, IndexedDB e fila de sincronização.
+- V3: dashboard diário, histórico, cards por área e compilado semanal.
 
-- **Frontend/PWA:** arquivos estáticos hospedados no Cloudflare Pages.
-- **Banco online:** Supabase.
-- **Offline:** o app abre offline após o primeiro acesso online e salva novos diários no aparelho.
-- **Sincronização:** quando a internet voltar, os registros pendentes são enviados ao Supabase.
-
-## O que está incluído
-
-- Tela de login.
-- Tela Hoje.
-- Novo diário.
-- Histórico.
-- Compilado semanal.
-- Menu Mais.
-- Cadastro de usuários.
-- Cadastro de setores.
-- Cadastro de máquinas.
-- Cards por área: Envase 1, Envase 2 e Processo.
-- Fila local de sincronização.
-- `manifest.webmanifest` para instalar no celular.
-- `service-worker.js` para cache/offline.
-- `_headers` e `_redirects` para Cloudflare Pages.
-
-## Configuração rápida
-
-1. Crie o projeto no Supabase.
-2. Rode o SQL em `sql/schema_supabase.sql`.
-3. Copie a **Project URL**, sem `/rest/v1/`.
-4. Copie a **chave publicável / anon public key**.
-5. Cole as informações em `assets/app.js`:
-
-```js
-const CONFIG = {
-  SUPABASE_URL: "https://SEU-PROJETO.supabase.co",
-  SUPABASE_ANON_KEY: "SUA_CHAVE_PUBLICAVEL",
-};
-```
-
-6. Suba a pasta no Cloudflare Pages.
-7. Acesse o link no celular e adicione à tela inicial.
+## Publicação
+Veja `docs/PASSO_A_PASSO_PUBLICAR.md`.
 
 ## Login inicial
-
-- E-mail: `admin@trevolacteos.com.br`
-- Senha: `admin123`
+admin@trevolacteos.com.br / admin123
 
 ## Observação importante
-
-O primeiro acesso precisa ser com internet. Depois disso, o app pode abrir offline no mesmo aparelho e manter registros pendentes até a conexão voltar.
+Este pacote está pronto para MVP operacional. Para uso corporativo final, recomenda-se ativar Supabase Auth + RLS por perfil antes de dados sensíveis.

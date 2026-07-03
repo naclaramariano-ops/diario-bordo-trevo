@@ -1,102 +1,117 @@
--- Diário de Bordo Trevo V7 | Supabase schema
--- Execute no Supabase: SQL Editor > New query > Run
-
+-- Diário de Bordo Trevo — Supabase schema V1+V2+V3
+-- Execute em um projeto novo do Supabase.
 create extension if not exists pgcrypto;
 
-create table if not exists public.usuarios (
+-- Limpeza segura para ambiente novo/teste.
+drop table if exists public.diario_maquinas cascade;
+drop table if exists public.diarios cascade;
+drop table if exists public.maquinas cascade;
+drop table if exists public.setores cascade;
+drop table if exists public.usuarios cascade;
+
+create table public.usuarios (
   id uuid primary key default gen_random_uuid(),
   nome text not null,
   email text not null unique,
+  senha_hash text not null,
   setor text not null,
   cargo text not null,
-  perfil text not null default 'lider',
+  perfil text not null check (perfil in ('admin','coordenador','lider')),
   ativo boolean not null default true,
-  senha_demo text not null default '123456',
-  criado_em timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
 
-create table if not exists public.setores (
+create table public.setores (
   id uuid primary key default gen_random_uuid(),
   nome text not null unique,
+  tipo text not null default 'envase',
   ativo boolean not null default true,
-  criado_em timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
 
-create table if not exists public.maquinas (
+create table public.maquinas (
   id uuid primary key default gen_random_uuid(),
-  setor_id uuid references public.setores(id) on delete cascade,
+  setor_id uuid not null references public.setores(id) on delete cascade,
   nome text not null,
   ativo boolean not null default true,
-  criado_em timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz,
   unique(setor_id,nome)
 );
 
-create table if not exists public.diarios (
-  id uuid primary key default gen_random_uuid(),
+create table public.diarios (
+  id uuid primary key,
   data date not null,
   turno text not null,
-  setor text not null,
+  setor_id uuid references public.setores(id),
+  setor_nome text not null,
   lider_id uuid references public.usuarios(id),
   lider_nome text not null,
-  status_turno text not null,
-  absenteismo text not null,
-  seguranca text not null,
-  qualidade text not null,
-  producao text not null,
-  manutencao text not null,
-  materiais text not null,
-  limpeza_organizacao text not null,
-  pendencias text not null,
-  prioridades_proximo_turno text not null,
   observacoes_gerais text not null,
-  criado_em timestamptz not null default now()
+  created_by uuid,
+  sync_status text default 'sincronizado',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
 
-create table if not exists public.diario_maquinas (
-  id uuid primary key default gen_random_uuid(),
-  diario_id uuid references public.diarios(id) on delete cascade,
+create table public.diario_maquinas (
+  id uuid primary key,
+  diario_id uuid not null references public.diarios(id) on delete cascade,
+  maquina_id uuid references public.maquinas(id),
   maquina_nome text not null,
-  produto text not null,
-  ordem text not null,
-  status_maquina text not null,
-  volume_programado text not null,
-  volume_realizado text not null,
-  paradas text not null,
-  perdas text not null,
-  observacao text not null,
-  criado_em timestamptz not null default now()
+  status_final text not null,
+  sku_produzindo text not null,
+  proximo_sku text not null,
+  perdas_embalagem text not null,
+  conferencia_paradas text not null,
+  vencimento_cip text not null,
+  limpeza_maquina_area text not null,
+  faltas text not null,
+  analise_sensorial text not null,
+  informacoes_datador text not null,
+  embalagem_selagem text not null,
+  preenchimento_cep_peso text not null,
+  inspecao_cop_plil text not null,
+  organizacao_descartes text not null,
+  organizacao_limpeza_maquina text not null,
+  observacao_acao text not null,
+  created_at timestamptz not null default now()
 );
 
-insert into public.setores (nome, ativo) values
-('Envase 1', true), ('Envase 2', true), ('Processo', true)
-on conflict (nome) do nothing;
+insert into public.setores (id,nome,tipo,ativo) values
+('11111111-1111-1111-1111-111111111111','Envase 1','envase',true),
+('22222222-2222-2222-2222-222222222222','Envase 2','envase',true),
+('33333333-3333-3333-3333-333333333333','Processo','processo',true);
 
-insert into public.usuarios (nome,email,setor,cargo,perfil,ativo,senha_demo) values
-('Administrador','admin@trevolacteos.com.br','Administrativo','Administrador','admin',true,'admin123'),
-('Líder Envase 1','lider.envase1@trevolacteos.com.br','Envase 1','Líder','lider',true,'123456'),
-('Líder Envase 2','lider.envase2@trevolacteos.com.br','Envase 2','Líder','lider',true,'123456'),
-('Líder Processo','lider.processo@trevolacteos.com.br','Processo','Líder','lider',true,'123456')
-on conflict (email) do nothing;
+insert into public.maquinas (setor_id,nome,ativo) values
+('11111111-1111-1111-1111-111111111111','BRASKOP 1',true),
+('11111111-1111-1111-1111-111111111111','BRASKOP 2',true),
+('11111111-1111-1111-1111-111111111111','BRASKOP 3',true),
+('11111111-1111-1111-1111-111111111111','DMAX 6',true),
+('11111111-1111-1111-1111-111111111111','SERAC 1',true),
+('11111111-1111-1111-1111-111111111111','SERAC 2',true),
+('22222222-2222-2222-2222-222222222222','DMAX 1',true),
+('22222222-2222-2222-2222-222222222222','DMAX 2',true),
+('22222222-2222-2222-2222-222222222222','DMAX 3',true),
+('22222222-2222-2222-2222-222222222222','DMAX 4',true),
+('22222222-2222-2222-2222-222222222222','GUALAPACK',true),
+('22222222-2222-2222-2222-222222222222','UHT',true),
+('33333333-3333-3333-3333-333333333333','Pasteurização',true),
+('33333333-3333-3333-3333-333333333333','Fermentação',true),
+('33333333-3333-3333-3333-333333333333','Tanques',true);
 
-insert into public.maquinas (setor_id,nome,ativo)
-select s.id, m.nome, true
-from public.setores s
-join (values
-('Envase 1','Braskop 1'),('Envase 1','Braskop 2'),('Envase 1','Braskop 3'),('Envase 1','Dmax 6'),('Envase 1','Serac 1'),('Envase 1','Serac 2'),
-('Envase 2','Dmax 1'),('Envase 2','Dmax 2'),('Envase 2','Dmax 3'),('Envase 2','Dmax 4'),('Envase 2','Gualapack'),('Envase 2','UHT'),
-('Processo','Pasteurização'),('Processo','Fermentação'),('Processo','Mistura'),('Processo','Tanques'),('Processo','Preparação')
-) as m(setor,nome) on m.setor=s.nome
-on conflict (setor_id,nome) do nothing;
+insert into public.usuarios (nome,email,senha_hash,setor,cargo,perfil,ativo) values
+('Administrador','admin@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Administrativo','Administrador','admin',true),
+('Líder Envase 1','lider.envase1@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Envase 1','Líder','lider',true),
+('Líder Envase 2','lider.envase2@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Envase 2','Líder','lider',true),
+('Líder Processo','lider.processo@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Processo','Líder','lider',true);
 
-alter table public.usuarios enable row level security;
-alter table public.setores enable row level security;
-alter table public.maquinas enable row level security;
-alter table public.diarios enable row level security;
-alter table public.diario_maquinas enable row level security;
-
--- MVP para teste com anon key. Antes de uso corporativo real, trocar para Supabase Auth + políticas por usuário/perfil.
-do $$ begin create policy "mvp_all_usuarios" on public.usuarios for all using (true) with check (true); exception when duplicate_object then null; end $$;
-do $$ begin create policy "mvp_all_setores" on public.setores for all using (true) with check (true); exception when duplicate_object then null; end $$;
-do $$ begin create policy "mvp_all_maquinas" on public.maquinas for all using (true) with check (true); exception when duplicate_object then null; end $$;
-do $$ begin create policy "mvp_all_diarios" on public.diarios for all using (true) with check (true); exception when duplicate_object then null; end $$;
-do $$ begin create policy "mvp_all_diario_maquinas" on public.diario_maquinas for all using (true) with check (true); exception when duplicate_object then null; end $$;
+-- Para este MVP PWA estático, RLS fica desabilitado para simplificar o teste com chave publicável.
+-- Em produção, a recomendação é migrar para Supabase Auth + RLS por perfil.
+alter table public.usuarios disable row level security;
+alter table public.setores disable row level security;
+alter table public.maquinas disable row level security;
+alter table public.diarios disable row level security;
+alter table public.diario_maquinas disable row level security;
