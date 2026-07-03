@@ -44,3 +44,5 @@ Senha: `admin123`
 ## Observação de segurança
 
 Esta entrega já separa perfis, RLS, estrutura modular e banco online. Para endurecimento enterprise máximo, a próxima sprint deve migrar criação/alteração de senha para Supabase Edge Functions com service role protegida, evitando qualquer operação sensível diretamente pelo cliente.
+
+
