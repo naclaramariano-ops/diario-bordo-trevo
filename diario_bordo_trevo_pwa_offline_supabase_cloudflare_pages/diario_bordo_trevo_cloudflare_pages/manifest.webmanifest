@@ -1,0 +1,15 @@
+{
+  "name": "Diário de Bordo Trevo - Diário de Bordo",
+  "short_name": "Diário Trevo",
+  "description": "Passagem de turno mobile com funcionamento offline e sincronização Supabase.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F7F8",
+  "theme_color": "#102E3A",
+  "icons": [
+    {"src":"assets/icon-192.svg","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"assets/icon-512.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
