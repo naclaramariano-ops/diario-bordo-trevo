@@ -16,7 +16,7 @@ create table public.usuarios (
   senha_hash text not null,
   setor text not null,
   cargo text not null,
-  perfil text not null check (perfil in ('admin','coordenador','lider')),
+  perfil text not null check (perfil in ('administrador','usuario')),
   ativo boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz
@@ -103,15 +103,13 @@ insert into public.maquinas (setor_id,nome,ativo) values
 ('33333333-3333-3333-3333-333333333333','Tanques',true);
 
 insert into public.usuarios (nome,email,senha_hash,setor,cargo,perfil,ativo) values
-('Administrador','admin@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Administrativo','Administrador','admin',true),
-('Líder Envase 1','lider.envase1@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Envase 1','Líder','lider',true),
-('Líder Envase 2','lider.envase2@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Envase 2','Líder','lider',true),
-('Líder Processo','lider.processo@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Processo','Líder','lider',true);
+('Ana Peliteiro','ana.peliteiro@trevolacteos.com.br','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Administrativo','Administrador','administrador',true)
+on conflict (email) do update set
+  nome=excluded.nome,
+  senha_hash=excluded.senha_hash,
+  setor=excluded.setor,
+  cargo=excluded.cargo,
+  perfil=excluded.perfil,
+  ativo=true;
 
--- Para este MVP PWA estático, RLS fica desabilitado para simplificar o teste com chave publicável.
--- Em produção, a recomendação é migrar para Supabase Auth + RLS por perfil.
-alter table public.usuarios disable row level security;
-alter table public.setores disable row level security;
-alter table public.maquinas disable row level security;
-alter table public.diarios disable row level security;
-alter table public.diario_maquinas disable row level security;
+

@@ -22,5 +22,6 @@ const DBT_API = (() => {
   const insert = (table, rows) => request(`/${table}`, {method:'POST', body:JSON.stringify(rows)});
   const update = (table, id, patch) => request(`/${table}?id=eq.${encodeURIComponent(id)}`, {method:'PATCH', body:JSON.stringify(patch)});
   const upsert = (table, rows) => request(`/${table}`, {method:'POST', headers:{Prefer:'resolution=merge-duplicates,return=representation'}, body:JSON.stringify(rows)});
-  return {configured, select, insert, update, upsert};
+  const remove = (table, id) => request(`/${table}?id=eq.${encodeURIComponent(id)}`, {method:'DELETE'});
+  return {configured, select, insert, update, upsert, remove};
 })();

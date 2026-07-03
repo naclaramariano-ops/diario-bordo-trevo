@@ -11,7 +11,7 @@ Aplicativo PWA para passagem de turno / diário de bordo da liderança, com Supa
 Veja `docs/PASSO_A_PASSO_PUBLICAR.md`.
 
 ## Login inicial
-admin@trevolacteos.com.br / admin123
+ana.peliteiro@trevolacteos.com.br / admin123
 
 ## Observação importante
 Este pacote está pronto para MVP operacional. Para uso corporativo final, recomenda-se ativar Supabase Auth + RLS por perfil antes de dados sensíveis.
