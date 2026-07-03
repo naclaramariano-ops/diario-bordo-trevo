@@ -1,63 +1,40 @@
-# Diário de Bordo Trevo — Enterprise Sprint 1 + Sprint 2
+# Diário de Bordo Trevo — Enterprise Sprint 1+2 UI/Admin V3
 
-Base nova, modular e profissional para Cloudflare Pages + Supabase + PWA offline.
+Base React + Vite + TypeScript para Cloudflare Pages + Supabase + PWA.
 
-## Incluído nesta entrega
+## Atualizações desta versão
 
-### Sprint 1 — Fundação
-- React + Vite + TypeScript
-- Estrutura modular: components, pages, services, hooks, store, utils, types
-- PWA instalável
-- Service Worker
-- Manifest
-- IndexedDB local
-- Supabase preparado
-- Login por usuário, sem e-mail: `ana.peliteiro`
+- Texto da abertura alterado para: **Operação conectada e rastreável.**
+- Administração evoluída com opção de **editar usuários**.
+- Administração evoluída com opção de **editar setores**.
+- Administração evoluída com opção de **editar máquinas**.
+- Usuários: editar nome, usuário, setor, cargo, perfil e status.
+- Setores: editar nome, tipo/grupo e status.
+- Máquinas: editar nome, setor vinculado e status.
+- UI/UX ajustada para celular e desktop, com cards administrativos mais claros.
 
-### Sprint 2 — Administração
-- Perfis: `administrador` e `usuario`
-- Cadastro de usuários com nome, usuário, setor, cargo, perfil e status
-- Cadastro de setores
-- Cadastro de máquinas por setor
-- Usuário comum não vê a área administrativa
-- Base para auditoria e rastreabilidade
+## Publicação
+
+1. Copie todo o conteúdo desta pasta para a raiz do repositório `diario-bordo-trevo`.
+2. Faça commit no GitHub Desktop.
+3. Clique em **Push origin**.
+4. Aguarde o Cloudflare Pages publicar.
+
+## Cloudflare Pages
+
+- Framework: React/Vite ou Vite
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Root directory: `/`
+
+## Variáveis
+
+Configurar no Cloudflare Pages:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
 ## Login inicial
 
-Usuário: `ana.peliteiro`
+Usuário: `ana.peliteiro`  
 Senha: `admin123`
-
-## Como publicar no Cloudflare Pages
-
-1. Rode o SQL em `supabase/schema.sql` no Supabase.
-2. Copie `.env.example` para `.env`.
-3. Preencha:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-4. Envie para GitHub.
-5. No Cloudflare Pages:
-   - Framework: Vite
-   - Build command: `npm run build`
-   - Build output directory: `dist`
-6. Configure as variáveis de ambiente também no Cloudflare Pages.
-
-## Observação de segurança
-
-Esta entrega já separa perfis, RLS, estrutura modular e banco online. Para endurecimento enterprise máximo, a próxima sprint deve migrar criação/alteração de senha para Supabase Edge Functions com service role protegida, evitando qualquer operação sensível diretamente pelo cliente.
-
-## Atualização de interface e administração
-
-Esta versão melhora a responsividade para desktop, celular e navegadores modernos, corrigindo o viewport e adaptando cards, formulários e listas sem cortar informações.
-
-Também inclui melhorias na administração:
-
-- Lista de usuários em cards responsivos.
-- Busca por nome, usuário, setor, cargo ou perfil.
-- Botão para ativar/inativar usuário.
-- Botão para resetar senha do usuário para `123456`.
-- Cadastro de usuário com nome, setor, cargo e perfil.
-- Usuário gerado automaticamente no padrão `primeiro.ultimo`.
-
-Após substituir os arquivos no repositório, faça commit e push pelo GitHub Desktop. O Cloudflare Pages atualizará automaticamente.
-
-
