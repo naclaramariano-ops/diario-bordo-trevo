@@ -45,4 +45,19 @@ Senha: `admin123`
 
 Esta entrega já separa perfis, RLS, estrutura modular e banco online. Para endurecimento enterprise máximo, a próxima sprint deve migrar criação/alteração de senha para Supabase Edge Functions com service role protegida, evitando qualquer operação sensível diretamente pelo cliente.
 
+## Atualização de interface e administração
+
+Esta versão melhora a responsividade para desktop, celular e navegadores modernos, corrigindo o viewport e adaptando cards, formulários e listas sem cortar informações.
+
+Também inclui melhorias na administração:
+
+- Lista de usuários em cards responsivos.
+- Busca por nome, usuário, setor, cargo ou perfil.
+- Botão para ativar/inativar usuário.
+- Botão para resetar senha do usuário para `123456`.
+- Cadastro de usuário com nome, setor, cargo e perfil.
+- Usuário gerado automaticamente no padrão `primeiro.ultimo`.
+
+Após substituir os arquivos no repositório, faça commit e push pelo GitHub Desktop. O Cloudflare Pages atualizará automaticamente.
+
 
