@@ -1,0 +1,7 @@
+const DB='diario_bordo_trevo_offline'; const VERSION=1;
+const stores=['session','usuarios_cache','setores_cache','maquinas_cache','diarios_cache','sync_queue','audit_cache'];
+function openDb():Promise<IDBDatabase>{return new Promise((res,rej)=>{const r=indexedDB.open(DB,VERSION);r.onupgradeneeded=()=>{const db=r.result;stores.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:'id'})})};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+export async function put(store:string,value:any){const db=await openDb();return new Promise<void>((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(value);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+export async function getAll<T>(store:string):Promise<T[]>{const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>res(req.result as T[]);req.onerror=()=>rej(req.error)})}
+export async function del(store:string,id:string){const db=await openDb();return new Promise<void>((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+export async function clear(store:string){const db=await openDb();return new Promise<void>((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
