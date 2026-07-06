@@ -1,28 +1,27 @@
-# Diário de Bordo Trevo — V5.4 Fix Admin Save
+# Diário de Bordo Trevo — V5 Enterprise Foundation
 
-Correções desta versão:
-
-- Corrigido erro ao editar usuário sem alterar senha (`senha_hash` nulo).
-- Novos usuários recebem senha provisória padrão `123456` e ficam com `trocar_senha = true`.
-- Corrigido cadastro de turnos quando o nome já existe: o app passa a atualizar o turno existente ao invés de quebrar por chave duplicada.
-- Incluída migration V5.4 para ajustar defaults, RLS e duplicidade de turnos.
+Base V5 preservada, com reforço enterprise na camada offline/sincronização.
 
 ## Atualização
 
-1. Rode no Supabase:
-
-`supabase/MIGRATION_V5_4_FIX_ADMIN_SAVE.sql`
-
-2. Substitua os arquivos no GitHub.
-3. Faça commit e push.
+1. Substitua os arquivos no repositório GitHub.
+2. Faça Commit.
+3. Faça Push origin.
 4. Aguarde o Cloudflare publicar.
-5. Atualize o navegador com Ctrl+F5.
+5. No navegador, use Ctrl + F5 uma vez.
 
-Login admin:
+## Supabase
 
-- Usuário: `ana.peliteiro`
-- Senha: `admin123`
+Não precisa rodar SQL novo se a V5.4 já foi aplicada.
 
-Senha provisória para novos usuários:
+## Entregue nesta versão
 
-- `123456`
+- Migração automática do IndexedDB.
+- Versionamento do banco offline.
+- Criação automática de novas object stores.
+- Sincronização resiliente com fila.
+- Registro de conflitos offline x online.
+- Atualização silenciosa via Service Worker.
+- Mantém o que já estava funcionando na V5.
+
+Veja detalhes em `docs/CHANGELOG_V5_ENTERPRISE_FOUNDATION.md`.
