@@ -1,25 +1,24 @@
-# Diário de Bordo Trevo — V5 Admin Enterprise
+# Diário de Bordo Trevo Enterprise — V5.1 Correção Admin
 
-Aplicativo PWA enterprise para Cloudflare Pages + Supabase.
+Correções desta versão:
 
-## Login inicial
-Usuário: `ana.peliteiro`
-Senha: `admin123`
+- Corrige o botão **Salvar alterações** no cadastro/edição de usuários.
+- Corrige o cadastro/edição de **turnos**.
+- Adiciona mensagens de erro visíveis caso o Supabase bloqueie alguma operação.
+- Mantém a área **Admin** somente para perfil `administrador`.
 
-## V5
-Foco exclusivo na aba **Admin**, visível somente para perfil `administrador`.
+## Atualização necessária
 
-Inclui:
-- Usuários
-- Setores
-- Máquinas
-- Turnos
-- Logs administrativos
-- Configurações gerais
-- Filtros inteligentes
-
-## Atualização
 1. Substitua os arquivos no repositório GitHub.
-2. Faça Commit e Push pelo GitHub Desktop.
-3. No Supabase, rode `supabase/MIGRATION_V5_ADMIN.sql` se estiver vindo da versão anterior.
-4. O Cloudflare Pages publicará automaticamente.
+2. Faça **Commit** e **Push origin** pelo GitHub Desktop.
+3. No Supabase, rode:
+
+```text
+supabase/MIGRATION_V5_1_FIX_ADMIN.sql
+```
+
+Depois atualize o app com Ctrl + F5.
+
+
+## V5.2 Fix SQL
+Correção de sintaxe na migration V5.1. Rode `supabase/MIGRATION_V5_2_FIX_SQL.sql` no Supabase.
