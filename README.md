@@ -1,27 +1,29 @@
-# Diário de Bordo Trevo — V5 Enterprise Foundation
+# Diário de Bordo Trevo — V6 Enterprise Passagem de Turno
 
-Base V5 preservada, com reforço enterprise na camada offline/sincronização.
+Base: V5 Enterprise Foundation mantida.
 
-## Atualização
+Esta entrega adiciona a rotina real de Passagem de Turno, sem remover as abas e funcionalidades já validadas.
 
-1. Substitua os arquivos no repositório GitHub.
-2. Faça Commit.
-3. Faça Push origin.
-4. Aguarde o Cloudflare publicar.
-5. No navegador, use Ctrl + F5 uma vez.
+## Incluído
+
+- Envase 1 e Envase 2 por máquina.
+- Processo por área e tanque.
+- PCP conforme / não conforme com campos condicionais.
+- Programado, produzido, SKU atual e próximos SKUs.
+- CIP com cálculo automático de 48 horas.
+- Justificativa obrigatória quando CIP está vencido.
+- Pessoas / trocas / avisos.
+- Observações gerais do turno.
+- Histórico exibindo resumo amigável da passagem V6.
 
 ## Supabase
 
-Não precisa rodar SQL novo se a V5.4 já foi aplicada.
+Não precisa rodar SQL novo se a V5 Enterprise Foundation já foi aplicada.
 
-## Entregue nesta versão
+## Atualização
 
-- Migração automática do IndexedDB.
-- Versionamento do banco offline.
-- Criação automática de novas object stores.
-- Sincronização resiliente com fila.
-- Registro de conflitos offline x online.
-- Atualização silenciosa via Service Worker.
-- Mantém o que já estava funcionando na V5.
-
-Veja detalhes em `docs/CHANGELOG_V5_ENTERPRISE_FOUNDATION.md`.
+1. Substitua os arquivos no GitHub.
+2. Commit.
+3. Push origin.
+4. Aguarde o Cloudflare Pages publicar.
+5. Pressione Ctrl + F5 uma vez no navegador.
