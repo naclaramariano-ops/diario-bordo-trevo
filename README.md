@@ -38,3 +38,12 @@ Configurar no Cloudflare Pages:
 
 Usuário: `ana.peliteiro`  
 Senha: `admin123`
+
+
+## V4 UI/UX Enterprise
+
+- Aba Mais removida da navegação inferior.
+- Logo DB no cabeçalho abre menu lateral de perfil.
+- Menu lateral com Meu Perfil, Alterar Senha, Tema Escuro, Sincronizar agora e Sair.
+- Interface refinada para celular, tablet e desktop.
+- Base mantém componentes administrativos de usuários, setores e máquinas com edição.
