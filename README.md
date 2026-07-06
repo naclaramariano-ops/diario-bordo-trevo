@@ -1,24 +1,18 @@
-# Diário de Bordo Trevo Enterprise — V5.1 Correção Admin
+# Diário de Bordo Trevo Enterprise — V5.3 Correção Login/Admin
 
-Correções desta versão:
+## O que corrige
+- Login `ana.peliteiro` + `admin123` corrigido.
+- Login não depende mais da RPC `login_usuario` para funcionar.
+- Perfil aceito: `administrador` e `usuario`.
+- Mantém a V5 Admin com usuários, setores, máquinas, turnos, logs e configurações.
 
-- Corrige o botão **Salvar alterações** no cadastro/edição de usuários.
-- Corrige o cadastro/edição de **turnos**.
-- Adiciona mensagens de erro visíveis caso o Supabase bloqueie alguma operação.
-- Mantém a área **Admin** somente para perfil `administrador`.
+## Atualização obrigatória
+1. Rode no Supabase: `supabase/MIGRATION_V5_3_FIX_LOGIN.sql`
+2. Substitua os arquivos do repositório por esta versão.
+3. GitHub Desktop: Commit > Push origin.
+4. Aguarde Cloudflare publicar.
+5. No navegador: Ctrl + F5.
 
-## Atualização necessária
-
-1. Substitua os arquivos no repositório GitHub.
-2. Faça **Commit** e **Push origin** pelo GitHub Desktop.
-3. No Supabase, rode:
-
-```text
-supabase/MIGRATION_V5_1_FIX_ADMIN.sql
-```
-
-Depois atualize o app com Ctrl + F5.
-
-
-## V5.2 Fix SQL
-Correção de sintaxe na migration V5.1. Rode `supabase/MIGRATION_V5_2_FIX_SQL.sql` no Supabase.
+## Login
+Usuário: ana.peliteiro
+Senha: admin123
