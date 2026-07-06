@@ -35,9 +35,22 @@ create table maquinas(
   id uuid primary key default gen_random_uuid(),
   setor_id uuid references setores(id) on delete cascade,
   nome text not null,
+  codigo text,
+  ordem integer not null default 0,
   ativo boolean not null default true,
   criado_em timestamptz not null default now(),
+  atualizado_em timestamptz,
   unique(setor_id,nome)
+);
+
+create table turnos(
+  id uuid primary key default gen_random_uuid(),
+  nome text unique not null,
+  inicio text not null default '00:00',
+  fim text not null default '00:00',
+  ativo boolean not null default true,
+  criado_em timestamptz not null default now(),
+  atualizado_em timestamptz
 );
 
 create table diarios(
@@ -73,6 +86,7 @@ insert into usuarios(nome,usuario,senha_hash,setor,cargo,perfil,ativo,trocar_sen
 values('Ana Peliteiro','ana.peliteiro','240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9','Operações','Administradora Geral','administrador',true,false);
 
 insert into setores(nome,tipo) values ('Envase 1','envase'),('Envase 2','envase'),('Processo','processo');
+insert into turnos(nome,inicio,fim,ativo) values ('1º Turno','06:00','14:00',true),('2º Turno','14:00','22:00',true),('3º Turno','22:00','06:00',true);
 insert into maquinas(setor_id,nome) select id,'Braskop 1' from setores where nome='Envase 1';
 insert into maquinas(setor_id,nome) select id,'Braskop 2' from setores where nome='Envase 1';
 insert into maquinas(setor_id,nome) select id,'Braskop 3' from setores where nome='Envase 1';
@@ -98,6 +112,7 @@ $$;
 alter table usuarios enable row level security;
 alter table setores enable row level security;
 alter table maquinas enable row level security;
+alter table turnos enable row level security;
 alter table diarios enable row level security;
 alter table audit_logs enable row level security;
 
@@ -105,5 +120,6 @@ create policy usuarios_read on usuarios for select using (true);
 create policy usuarios_write on usuarios for all using (true) with check (true);
 create policy setores_all on setores for all using (true) with check (true);
 create policy maquinas_all on maquinas for all using (true) with check (true);
+create policy turnos_all on turnos for all using (true) with check (true);
 create policy diarios_all on diarios for all using (true) with check (true);
 create policy audit_all on audit_logs for all using (true) with check (true);

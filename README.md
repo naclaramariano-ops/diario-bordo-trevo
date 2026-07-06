@@ -1,49 +1,25 @@
-# Diário de Bordo Trevo — Enterprise Sprint 1+2 UI/Admin V3
+# Diário de Bordo Trevo — V5 Admin Enterprise
 
-Base React + Vite + TypeScript para Cloudflare Pages + Supabase + PWA.
-
-## Atualizações desta versão
-
-- Texto da abertura alterado para: **Operação conectada e rastreável.**
-- Administração evoluída com opção de **editar usuários**.
-- Administração evoluída com opção de **editar setores**.
-- Administração evoluída com opção de **editar máquinas**.
-- Usuários: editar nome, usuário, setor, cargo, perfil e status.
-- Setores: editar nome, tipo/grupo e status.
-- Máquinas: editar nome, setor vinculado e status.
-- UI/UX ajustada para celular e desktop, com cards administrativos mais claros.
-
-## Publicação
-
-1. Copie todo o conteúdo desta pasta para a raiz do repositório `diario-bordo-trevo`.
-2. Faça commit no GitHub Desktop.
-3. Clique em **Push origin**.
-4. Aguarde o Cloudflare Pages publicar.
-
-## Cloudflare Pages
-
-- Framework: React/Vite ou Vite
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Root directory: `/`
-
-## Variáveis
-
-Configurar no Cloudflare Pages:
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+Aplicativo PWA enterprise para Cloudflare Pages + Supabase.
 
 ## Login inicial
-
-Usuário: `ana.peliteiro`  
+Usuário: `ana.peliteiro`
 Senha: `admin123`
 
+## V5
+Foco exclusivo na aba **Admin**, visível somente para perfil `administrador`.
 
-## V4 UI/UX Enterprise
+Inclui:
+- Usuários
+- Setores
+- Máquinas
+- Turnos
+- Logs administrativos
+- Configurações gerais
+- Filtros inteligentes
 
-- Aba Mais removida da navegação inferior.
-- Logo DB no cabeçalho abre menu lateral de perfil.
-- Menu lateral com Meu Perfil, Alterar Senha, Tema Escuro, Sincronizar agora e Sair.
-- Interface refinada para celular, tablet e desktop.
-- Base mantém componentes administrativos de usuários, setores e máquinas com edição.
+## Atualização
+1. Substitua os arquivos no repositório GitHub.
+2. Faça Commit e Push pelo GitHub Desktop.
+3. No Supabase, rode `supabase/MIGRATION_V5_ADMIN.sql` se estiver vindo da versão anterior.
+4. O Cloudflare Pages publicará automaticamente.
