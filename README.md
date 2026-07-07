@@ -1,25 +1,18 @@
-# Diário de Bordo Trevo — V6.1 Envase
+# Diário de Bordo Trevo — V6.1.1 Build Fix
 
-Versão incremental integrada à base V5 Enterprise Foundation.
+Correção do build Cloudflare.
 
 ## O que mudou
+- Removido `package-lock.json` gerado em ambiente interno.
+- Dependências fixadas em versões estáveis.
+- Adicionado `.npmrc` apontando para o registry público do npm.
+- Mantida a V6.1 Envase: motivos PCP, CIP 72h, parada >= 4h, validação e histórico/hoje.
 
-- V6.1 aplicada somente em Envase 1 e Envase 2.
-- Validade de CIP alterada para 72 horas.
-- Regra adicional: se a máquina ficar parada por 4 horas ou mais, o sistema exige controle de CIP de renovação.
-- Novos motivos PCP: Atraso base, Padronização e Reprocesso.
-- Validação melhorada: ao salvar/finalizar com campo faltante, o aplicativo leva o usuário automaticamente para a máquina pendente.
-- Lançamentos finalizados aparecem no Hoje por turno e no Histórico.
-- Exibição do usuário, data e horário do lançamento.
+## Atualização
+1. Substitua os arquivos no repositório.
+2. Apague `package-lock.json` do repositório se ele aparecer.
+3. Apague `node_modules` se existir.
+4. Commit > Push origin.
+5. Cloudflare: React/Vite, build `npm run build`, output `dist`.
 
-## Como publicar
-
-1. Substitua os arquivos no repositório GitHub.
-2. Não envie `node_modules`.
-3. Faça Commit e Push origin.
-4. Aguarde o Cloudflare Pages publicar.
-5. Atualize o aplicativo com Ctrl + F5 uma vez.
-
-## Supabase
-
-Não é necessário rodar SQL novo se a V5 Enterprise Foundation já foi aplicada.
+Não precisa rodar SQL novo.
