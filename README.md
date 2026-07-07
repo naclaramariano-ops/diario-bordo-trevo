@@ -1,27 +1,25 @@
-# Diário de Bordo Trevo — V5 Enterprise Foundation
+# Diário de Bordo Trevo — V6.1 Envase
 
-Base V5 preservada, com reforço enterprise na camada offline/sincronização.
+Versão incremental integrada à base V5 Enterprise Foundation.
 
-## Atualização
+## O que mudou
+
+- V6.1 aplicada somente em Envase 1 e Envase 2.
+- Validade de CIP alterada para 72 horas.
+- Regra adicional: se a máquina ficar parada por 4 horas ou mais, o sistema exige controle de CIP de renovação.
+- Novos motivos PCP: Atraso base, Padronização e Reprocesso.
+- Validação melhorada: ao salvar/finalizar com campo faltante, o aplicativo leva o usuário automaticamente para a máquina pendente.
+- Lançamentos finalizados aparecem no Hoje por turno e no Histórico.
+- Exibição do usuário, data e horário do lançamento.
+
+## Como publicar
 
 1. Substitua os arquivos no repositório GitHub.
-2. Faça Commit.
-3. Faça Push origin.
-4. Aguarde o Cloudflare publicar.
-5. No navegador, use Ctrl + F5 uma vez.
+2. Não envie `node_modules`.
+3. Faça Commit e Push origin.
+4. Aguarde o Cloudflare Pages publicar.
+5. Atualize o aplicativo com Ctrl + F5 uma vez.
 
 ## Supabase
 
-Não precisa rodar SQL novo se a V5.4 já foi aplicada.
-
-## Entregue nesta versão
-
-- Migração automática do IndexedDB.
-- Versionamento do banco offline.
-- Criação automática de novas object stores.
-- Sincronização resiliente com fila.
-- Registro de conflitos offline x online.
-- Atualização silenciosa via Service Worker.
-- Mantém o que já estava funcionando na V5.
-
-Veja detalhes em `docs/CHANGELOG_V5_ENTERPRISE_FOUNDATION.md`.
+Não é necessário rodar SQL novo se a V5 Enterprise Foundation já foi aplicada.
