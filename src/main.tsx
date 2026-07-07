@@ -115,9 +115,9 @@ function NovoDiario({onSaved}:{onSaved:()=>void}){
     for(let i=0;i<maquinas.length;i++){
       const m=maquinas[i];
       const x=registros[m];
-      if(!x){setAtual(i);focusField('sku_atual',`${m}: preencha esta máquina antes de finalizar.`);return}
+      if(!x){setAtual(i);setTimeout(()=>focusField('sku_atual',`${m}: preencha esta máquina antes de finalizar.`),80);return}
       const invalid=validateOne(x);
-      if(invalid){setAtual(i);focusField(invalid.field,`${m}: ${invalid.msg}`);return}
+      if(invalid){setAtual(i);setTimeout(()=>focusField(invalid.field,`${m}: ${invalid.msg}`),80);return}
     }
     if(!pessoas.trim()){focusField('pessoas','Preencha Pessoas / Trocas / Avisos. Se não houver, escreva: Sem ocorrência.');return}
     if(!obs.trim()){focusField('observacoes_gerais','Preencha Observações gerais do turno. Se não houver, escreva: Sem ocorrência.');return}
@@ -127,7 +127,7 @@ function NovoDiario({onSaved}:{onSaved:()=>void}){
     setSalvando(true);
     try{
       await saveDiario({
-        data,turno,setor_id:area.toLowerCase().replace(' ','_'),setor_nome:area,lider_id:me.id,lider_nome:me.nome,status:'Finalizado',
+        data,turno,setor_id:null,setor_nome:area,lider_id:me.id,lider_nome:me.nome,status:'Finalizado',
         resumo:JSON.stringify(payload),editado:false,criado_por:me.id,criado_em:now,atualizado_em:now
       });
       setRegistros({});setPessoas('');setObs('');setAtual(0);
