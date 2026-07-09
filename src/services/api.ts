@@ -5,10 +5,21 @@ import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types'
 import { del, enqueueSync, getAll, put, registerConflict } from './localDb';
 
 async function cacheList<T>(store:string, online:()=>Promise<T[]>){
+  const local = await getAll<T>(store);
   if(supabaseConfigured&&navigator.onLine){
-    try{const data=await online();for(const x of data as any[]) await put(store,x);return data}catch(e){console.warn('cache fallback',store,e)}
+    try{
+      const data=await online();
+      for(const x of data as any[]) await put(store,x);
+      // Importante para o modo offline-first: se algum registro foi salvo localmente
+      // e ainda está pendente de sincronização, ele precisa aparecer nas telas
+      // Hoje/Histórico mesmo quando a consulta online retorna sem esse item.
+      const map=new Map<string,any>();
+      for(const x of data as any[]) if(x?.id) map.set(x.id,x);
+      for(const x of local as any[]) if(x?.id&&!map.has(x.id)) map.set(x.id,x);
+      return Array.from(map.values()) as T[];
+    }catch(e){console.warn('cache fallback',store,e)}
   }
-  return getAll<T>(store)
+  return local
 }
 async function audit(entidade:string, entidade_id:string, acao:string, detalhes:any={}){
   const me=currentUser();
