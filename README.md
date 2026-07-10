@@ -1,31 +1,23 @@
-# Diário de Bordo Trevo — V6.7 UX Prática
+# Diário de Bordo Trevo — V6.7.5 UX Refinement
 
-Evolução direta da base V6.5.1 validada.
+Evolução direta da base funcional V6.7.4, mantendo Hoje, Novo, Histórico, Admin, PWA, Supabase, IndexedDB e sincronização.
 
-## Principal melhoria
+## Melhorias desta versão
 
-A aba **Novo** foi redesenhada para reduzir burocracia no celular:
-
-- uma máquina por vez;
-- todos os blocos essenciais na mesma tela;
-- campos condicionais somente quando necessários;
-- botões grandes Sim/Não;
-- lista de máquinas com progresso;
-- botão **Salvar e próxima**;
-- atalhos **Sem avisos** e **Sem observações**;
-- validação direcionando ao primeiro campo pendente;
-- SKU pesquisável por máquina;
-- CIP automático em 72 horas;
-- regra de parada contínua ≥ 4h;
-- mantém Hoje, Histórico, Admin, PWA, offline e sincronização.
+- Programado e Produzido formatados automaticamente com ponto de milhar.
+- Próximo CIP exibido em dia/mês/ano • horário.
+- Correção do bloco de Observações gerais da passagem.
+- Data e Turno sem sobreposição no celular.
+- Botões e campos mais compactos no mobile.
+- Seletor de SKU em tela própria, mantendo pesquisa e avanço automático.
+- Estrutura modular preservada.
 
 ## Cloudflare Pages
 
-- Framework: React (Vite)
-- Build command: `npm run build`
-- Output directory: `dist`
+- Build command: `pnpm run build`
+- Build output directory: `dist`
 - Root directory: vazio
 
 ## Build verificado
 
-O pacote inclui `package-lock.json` gerado com Node 22.16.0 e npm 10.9.2, a mesma versão exibida no log do Cloudflare.
+Executado localmente com TypeScript e Vite 5.4.11.
