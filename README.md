@@ -1,4 +1,4 @@
-# Diário de Bordo Trevo — V6.7.5 UX Refinement
+# Diário de Bordo Trevo — V6.7.6 UX Refinement
 
 Evolução direta da base funcional V6.7.4, mantendo Hoje, Novo, Histórico, Admin, PWA, Supabase, IndexedDB e sincronização.
 
