@@ -25,3 +25,15 @@ Não precisa rodar SQL novo se a V5.4 já foi aplicada.
 - Mantém o que já estava funcionando na V5.
 
 Veja detalhes em `docs/CHANGELOG_V5_ENTERPRISE_FOUNDATION.md`.
+
+
+## V6.5 — SKU por máquina
+A lista suspensa de SKU é específica por máquina, em ordem alfabética, com **Sem Programação** disponível para todas. Não requer migration no Supabase.
+
+
+## V6.5
+- UHT substituído por TBA 1 e TBA 2 no Envase 2.
+- Cada TBA possui passagem, CIP, histórico e classificação próprios.
+- Campos de SKU são pesquisáveis e mostram somente SKUs permitidos para a máquina.
+- `Sem Programação` aparece no topo de todas as listas.
+- Demais SKUs aparecem em ordem alfabética.
