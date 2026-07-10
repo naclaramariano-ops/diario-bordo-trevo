@@ -1,5 +1,6 @@
-import React,{useEffect,useMemo,useState}from'react';
+import React,{useEffect,useMemo,useRef,useState}from'react';
 import{createRoot}from'react-dom/client';
+import{createPortal}from'react-dom';
 import{Home,Plus,History,Users,Wifi,WifiOff,RefreshCcw,KeyRound,UserPlus,ShieldCheck,Edit3,X,Save,UserRound,Moon,Sun,LogOut,Search,Power,CheckCircle2,Factory,Clock3,Activity,Trash2,SlidersHorizontal,Database,Settings2}from'lucide-react';
 import'./styles.css';
 import{currentUser,login,logout,isAdmin}from'./services/auth';
@@ -9,7 +10,7 @@ import{makeUsername}from'./utils/security';
 import type{Usuario,Setor,Maquina,Diario,Turno,AuditLog}from'./types';
 import { skuOptionsForMachine } from './data/skuByMachine';
 
-function Login({onOk}:{onOk:()=>void}){const[u,setU]=useState('ana.peliteiro'),[s,setS]=useState('admin123'),[err,setErr]=useState('');async function go(e:any){e.preventDefault();setErr('');try{await login(u,s);onOk()}catch(x:any){setErr(x.message||'Usuário, senha ou status inválido.')}}return <div className="login"><div className="loginPanel"><div className="brand"><div className="logo">DB</div><h1>Diário de Bordo Trevo</h1><p>Operação conectada e rastreável.</p></div><form className="card loginCard" onSubmit={go}>{!supabaseConfigured&&<div className="configWarning"><b>Modo local ativo</b><span>O build não recebeu as variáveis do Supabase. A interface continua disponível, mas a sincronização online ficará desativada até a configuração ser recebida.</span></div>}<label>Usuário<input value={u} onChange={e=>setU(e.target.value)} placeholder="ana.peliteiro" autoCapitalize="none" autoCorrect="off"/></label><label>Senha<input type="password" value={s} onChange={e=>setS(e.target.value)}/></label>{err&&<div className="err">{err}</div>}<button className="primary">Entrar</button></form></div></div>}
+function Login({onOk}:{onOk:()=>void}){const[u,setU]=useState('ana.peliteiro'),[s,setS]=useState('admin123'),[err,setErr]=useState('');async function go(e:any){e.preventDefault();setErr('');try{await login(u,s);onOk()}catch(x:any){setErr(x.message||'Usuário, senha ou status inválido.')}}return <div className="login"><div className="loginPanel"><div className="brand"><div className="logo">DB</div><h1>Diário de Bordo Trevo</h1><p>Operação conectada e rastreável.</p></div><form className="card loginCard" onSubmit={go}><label>Usuário<input value={u} onChange={e=>setU(e.target.value)} placeholder="ana.peliteiro" autoCapitalize="none" autoCorrect="off"/></label><label>Senha<input type="password" value={s} onChange={e=>setS(e.target.value)}/></label>{err&&<div className="err">{err}</div>}<button className="primary">Entrar</button></form></div></div>}
 function Shell(){const[tab,setTab]=useState('home'),[online,setOnline]=useState(navigator.onLine),[tick,setTick]=useState(0),[profileOpen,setProfileOpen]=useState(false),[dark,setDark]=useState(localStorage.getItem('dbt_theme')==='dark');useEffect(()=>{document.body.classList.toggle('darkTheme',dark);localStorage.setItem('dbt_theme',dark?'dark':'light')},[dark]);useEffect(()=>{const a=()=>setOnline(true),b=()=>setOnline(false);addEventListener('online',a);addEventListener('offline',b);return()=>{removeEventListener('online',a);removeEventListener('offline',b)}},[]);async function sync(){await syncPending();setTick(tick+1)}const me=currentUser()!;return <><header className="topbar"><button className="logoButton" onClick={()=>setProfileOpen(true)} aria-label="Abrir menu do perfil"><div className="miniLogo">DB</div></button><div className="appIdentity"><div><b>Diário de Bordo Trevo</b><span>{me.nome} • {me.perfil}</span></div></div><div className={online?'pill ok':'pill bad'}>{online?<Wifi size={14}/>:<WifiOff size={14}/>} {online?'Online':'Offline'}</div></header><main>{tab==='home'&&<HomePage tick={tick}/>} {tab==='novo'&&<NovoDiario onSaved={()=>setTab('historico')}/>} {tab==='historico'&&<Historico/>} {tab==='admin'&&<Admin/>}</main><nav className="bottomNav"><button onClick={()=>setTab('home')} className={tab==='home'?'active':''}><Home/>Hoje</button><button onClick={()=>setTab('novo')} className={tab==='novo'?'active':''}><Plus/>Novo</button><button onClick={()=>setTab('historico')} className={tab==='historico'?'active':''}><History/>Histórico</button>{isAdmin()&&<button onClick={()=>setTab('admin')} className={tab==='admin'?'active':''}><Users/>Admin</button>}</nav><ProfileDrawer open={profileOpen} onClose={()=>setProfileOpen(false)} onSync={sync} dark={dark} setDark={setDark}/></>}
 function ProfileDrawer({open,onClose,onSync,dark,setDark}:{open:boolean;onClose:()=>void;onSync:()=>void;dark:boolean;setDark:(v:boolean)=>void}){const me=currentUser()!;const[showProfile,setShowProfile]=useState(false),[showPassword,setShowPassword]=useState(false),[senha,setSenha]=useState(''),[senha2,setSenha2]=useState(''),[msg,setMsg]=useState('');if(!open)return null;async function trocarSenha(){if(senha.length<6)return setMsg('A senha precisa ter no mínimo 6 caracteres.');if(senha!==senha2)return setMsg('As senhas não conferem.');await saveUsuario({id:me.id,senha,trocar_senha:false});setSenha('');setSenha2('');setMsg('Senha alterada com sucesso.')}return <div className="drawerBackdrop" onClick={onClose}><aside className="profileDrawer" onClick={e=>e.stopPropagation()}><div className="drawerHeader"><div className="drawerLogo">DB</div><button className="iconBtn" onClick={onClose}><X size={20}/></button></div><h2>{me.nome}</h2><p>{me.usuario} • {me.perfil}</p><div className="drawerMeta"><span>{me.setor}</span><span>{me.cargo}</span></div><div className="drawerActions"><button className="drawerAction" onClick={()=>setShowProfile(!showProfile)}><UserRound size={18}/> Meu Perfil</button><button className="drawerAction" onClick={()=>setShowPassword(!showPassword)}><KeyRound size={18}/> Alterar Senha</button><button className="drawerAction" onClick={onSync}><RefreshCcw size={18}/> Sincronizar agora</button><button className="drawerAction" onClick={()=>setDark(!dark)}>{dark?<Sun size={18}/>:<Moon size={18}/>} {dark?'Tema claro':'Tema escuro'}</button><button className="drawerAction dangerLine" onClick={()=>{logout();location.reload()}}><LogOut size={18}/> Sair</button></div>{showProfile&&<div className="drawerPanel"><b>Meu Perfil</b><p><strong>Nome:</strong> {me.nome}</p><p><strong>Usuário:</strong> {me.usuario}</p><p><strong>Setor:</strong> {me.setor}</p><p><strong>Cargo:</strong> {me.cargo}</p><p><strong>Perfil:</strong> {me.perfil}</p></div>}{showPassword&&<div className="drawerPanel"><b>Alterar Senha</b><label>Nova senha<input type="password" value={senha} onChange={e=>setSenha(e.target.value)} placeholder="mínimo 6 caracteres"/></label><label>Confirmar senha<input type="password" value={senha2} onChange={e=>setSenha2(e.target.value)} /></label>{msg&&<div className="hint">{msg}</div>}<button className="primary" onClick={trocarSenha}><Save size={18}/> Salvar nova senha</button></div>}</aside></div>}
 
@@ -38,62 +39,60 @@ function classifyMachine(m:MachineEntry){const now=new Date();const next=m.proxi
 
 function focusNextControl(current:HTMLElement|null){
   if(!current)return;
-  const form=current.closest('.opGroupBody')||current.closest('section')||document.body;
-  const controls=Array.from(form.querySelectorAll<HTMLElement>('input:not([readonly]), select, textarea, button.primary'))
+  const form=current.closest('.quickFormCard')||current.closest('.opGroupBody')||current.closest('section')||document.body;
+  const controls=Array.from(form.querySelectorAll<HTMLElement>('input:not([readonly]), select, textarea, button.skuTrigger, button.primary'))
     .filter(el=>!el.hasAttribute('disabled')&&el.offsetParent!==null);
-  const idx=controls.indexOf(current);
+  const choiceGroup=current.closest('.choiceButtons');
+  const anchor=choiceGroup?(choiceGroup.querySelectorAll<HTMLElement>('button').item(choiceGroup.querySelectorAll('button').length-1)||current):current;
+  const idx=controls.indexOf(anchor);
   if(idx>=0&&idx<controls.length-1){
-    setTimeout(()=>{const nextControl=controls[idx+1]; nextControl.focus(); if(nextControl instanceof HTMLInputElement) nextControl.select();},80);
+    setTimeout(()=>{
+      const nextControl=controls[idx+1];
+      nextControl.scrollIntoView({behavior:'smooth',block:'center'});
+      nextControl.focus({preventScroll:true});
+      if(nextControl instanceof HTMLInputElement)nextControl.select();
+    },100);
   }
 }
-function SkuSelect({value,onChange,label,machine,autoAdvance=false}:{value:string;onChange:(v:string)=>void;label:string;machine:string;autoAdvance?:boolean}){
+function nextOnEnter(e:React.KeyboardEvent<HTMLElement>){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    focusNextControl(e.currentTarget);
+  }
+}
+function nextAfterChange(el:HTMLElement){setTimeout(()=>focusNextControl(el),100)}
+function SkuSelect({value,onChange,label,machine,autoAdvance=true}:{value:string;onChange:(v:string)=>void;label:string;machine:string;autoAdvance?:boolean}){
   const options=useMemo(()=>skuOptionsForMachine(machine),[machine]);
-  const[query,setQuery]=useState(value||'');
+  const[query,setQuery]=useState('');
   const[open,setOpen]=useState(false);
-  useEffect(()=>{setQuery(value||'')},[value,machine]);
+  const triggerRef=useRef<HTMLButtonElement|null>(null);
+  const searchRef=useRef<HTMLInputElement|null>(null);
   const filtered=useMemo(()=>{
     const q=query.trim().toLocaleLowerCase('pt-BR');
     if(!q)return options;
     return options.filter(item=>item.toLocaleLowerCase('pt-BR').includes(q));
   },[options,query]);
-  function choose(item:string,input:HTMLInputElement|null){
-    setQuery(item);
-    setOpen(false);
+  useEffect(()=>{
+    if(!open)return;
+    const old=document.body.style.overflow;
+    document.body.style.overflow='hidden';
+    const id=setTimeout(()=>searchRef.current?.focus(),100);
+    return()=>{clearTimeout(id);document.body.style.overflow=old};
+  },[open]);
+  function close(){setOpen(false);setQuery('')}
+  function choose(item:string){
     onChange(item);
-    if(autoAdvance&&input)focusNextControl(input);
+    close();
+    if(autoAdvance)setTimeout(()=>focusNextControl(triggerRef.current),140);
   }
-  return <label className="skuField">{label}<div className="skuCombo"><input
-    value={query}
-    placeholder="Digite para pesquisar ou toque para listar"
-    autoComplete="off"
-    onFocus={()=>setOpen(true)}
-    onChange={e=>{setQuery(e.target.value);setOpen(true)}}
-    onKeyDown={e=>{
-      if(e.key==='Enter'){
-        e.preventDefault();
-        const exact=options.find(item=>item.toLocaleLowerCase('pt-BR')===query.trim().toLocaleLowerCase('pt-BR'));
-        const choice=exact||filtered[0];
-        if(choice)choose(choice,e.currentTarget);
-      }
-      if(e.key==='Escape')setOpen(false);
-    }}
-    onBlur={e=>{
-      setTimeout(()=>{
-        setOpen(false);
-        if(query&& !options.includes(query))setQuery(value||'');
-      },140);
-    }}
-    aria-expanded={open}
-    aria-autocomplete="list"
-  />{open&&<div className="skuDropdown" role="listbox">{filtered.length?filtered.map(item=><button
-      type="button"
-      key={item}
-      className={item==='Sem Programação'?'skuOption noSchedule':'skuOption'}
-      onMouseDown={e=>e.preventDefault()}
-      onClick={e=>choose(item,e.currentTarget.parentElement?.previousElementSibling as HTMLInputElement|null)}
-    >{item}</button>):<div className="skuEmpty">Nenhum SKU disponível para esta máquina.</div>}</div>}</div></label>
+  const modal=open?createPortal(<div className="skuModal" role="dialog" aria-modal="true" aria-label={`Selecionar ${label}`}>
+    <div className="skuModalHeader"><div><small>{machine}</small><h3>{label}</h3></div><button type="button" className="iconBtn skuModalClose" onClick={close}><X size={22}/></button></div>
+    <div className="skuModalSearch"><Search size={20}/><input ref={searchRef} value={query} onChange={e=>setQuery(e.target.value)} placeholder="Digite nome ou código do SKU" inputMode="search" enterKeyHint="search"/></div>
+    <div className="skuModalHint">Toque em uma opção para selecionar e seguir automaticamente.</div>
+    <div className="skuModalList" role="listbox">{filtered.length?filtered.map(item=><button type="button" key={item} className={item==='Sem Programação'?'skuModalOption noSchedule':'skuModalOption'} onClick={()=>choose(item)}>{item}</button>):<div className="skuEmpty">Nenhum SKU encontrado.</div>}</div>
+  </div>,document.body):null;
+  return <label className="skuField">{label}<button ref={triggerRef} type="button" className="skuTrigger" onClick={()=>setOpen(true)} aria-haspopup="dialog"><span className={value?'':'placeholder'}>{value||'Toque para selecionar o SKU'}</span><Search size={18}/></button>{modal}</label>
 }
-
 function operationalItems(diarios:Diario[], period?:(d:Diario)=>boolean):OperationalItem[]{const list:OperationalItem[]=[];diarios.filter(d=>period?period(d):true).forEach(d=>{const p=parsePassagem(d);if(!p)return;p.maquinas.forEach(m=>{const c=classifyMachine(m);list.push({record:d,payload:p,machine:m,status:c.status,reason:c.reason,turno:p.turno,area:p.area,machineName:m.maquina,criadoEm:p.criadoEm,lider:p.lider})})});return list.sort((a,b)=>new Date(b.criadoEm).getTime()-new Date(a.criadoEm).getTime())}
 function latestItems(items:OperationalItem[]){const map=new Map<string,OperationalItem>();items.forEach(i=>{const k=`${i.area}|${i.machineName}|${i.turno}`;if(!map.has(k))map.set(k,i)});return Array.from(map.values())}
 function StatusPill({status}:{status:OperationalItem['status']}){return <span className={'opPill '+status}>{status==='desvio'?'Desvio':status==='atencao'?'Atenção':'Conforme'}</span>}
@@ -104,6 +103,9 @@ function HomePage({tick}:{tick:number}){const[diarios,setD]=useState<Diario[]>([
 function newEntry(machine:string):MachineEntry{return{maquina:machine,pcpStatus:'sim',skuAtual:'',programado:'',produzido:'',proximosSkus:'',ultimoCip:'',proximoCip:'',fezCip:'nao',parada4h:'nao',observacoes:'',pessoas:''}}
 function NovoDiario({onSaved}:{onSaved:()=>void}){
   const[area,setArea]=useState<AreaEnvase>('Envase 1'),[turno,setTurno]=useState('1º Turno'),[data,setData]=useState(new Date().toISOString().slice(0,10)),[obs,setObs]=useState(''),[entries,setEntries]=useState<MachineEntry[]>(DEFAULT_MACHINES['Envase 1'].map(newEntry)),[activeMachine,setActiveMachine]=useState(DEFAULT_MACHINES['Envase 1'][0]),[error,setError]=useState('');
+  const DRAFT_KEY='dbt_v674_passagem_draft';
+  useEffect(()=>{try{const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return;const d=JSON.parse(raw);if(d?.entries?.length){setArea(d.area);setTurno(d.turno);setData(d.data);setObs(d.obs||'');setEntries(d.entries);setActiveMachine(d.activeMachine||d.entries[0].maquina)}}catch{}},[]);
+  useEffect(()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({area,turno,data,obs,entries,activeMachine}))},[area,turno,data,obs,entries,activeMachine]);
   const active=entries.find(e=>e.maquina===activeMachine)||entries[0];
   function changeArea(a:AreaEnvase){setArea(a);const next=DEFAULT_MACHINES[a].map(newEntry);setEntries(next);setActiveMachine(next[0].maquina);setError('')}
   function upd(machine:string,patch:Partial<MachineEntry>){setEntries(es=>es.map(e=>e.maquina===machine?{...e,...patch}:e))}
@@ -168,6 +170,7 @@ function NovoDiario({onSaved}:{onSaved:()=>void}){
     const me=currentUser()!;
     const payload:PassagemV6={version:'v6-envase',area,turno,data,lider:me.nome,liderId:me.id,criadoEm:new Date().toISOString(),maquinas:entries,observacoesGerais:obs||'Sem observações gerais.'};
     await saveDiario({data,turno,setor_nome:area,lider_id:me.id,lider_nome:me.nome,status:'Finalizado',resumo:V6_PREFIX+JSON.stringify(payload)});
+    localStorage.removeItem(DRAFT_KEY);
     onSaved()
   }
   const cipExpired=!!active.proximoCip&&new Date(active.proximoCip)<new Date();
@@ -182,15 +185,15 @@ function NovoDiario({onSaved}:{onSaved:()=>void}){
     <div className="machineScroller" aria-label="Máquinas">{entries.map(e=><button type="button" key={e.maquina} className={(activeMachine===e.maquina?'active ':'')+(!missingFor(e)?'done':'')} onClick={()=>{setActiveMachine(e.maquina);setError('')}}><span>{e.maquina}</span><small>{!missingFor(e)?'✓ pronto':'preencher'}</small></button>)}</div>
     <div className="quickFormCard" data-machine-form={active.maquina}>
       <div className="quickFormHeader"><div><small>{area} • {turno}</small><h3>{active.maquina}</h3></div><span className={!missingFor(active)?'quickBadge done':'quickBadge'}>{!missingFor(active)?'Concluída':'Em preenchimento'}</span></div>
-      <div className="quickSection"><h4>Programação e produção</h4><label>Seguiu a programação PCP?<div className="choiceButtons"><button type="button" className={active.pcpStatus==='sim'?'selected':''} onClick={()=>upd(active.maquina,{pcpStatus:'sim'})}>Sim</button><button type="button" className={active.pcpStatus==='nao'?'selected dangerChoice':''} onClick={()=>upd(active.maquina,{pcpStatus:'nao'})}>Não</button></div></label>
-      {active.pcpStatus==='nao'&&<div className="conditionalBox dangerBox"><label>Motivo<select value={active.motivo||''} onChange={e=>upd(active.maquina,{motivo:e.target.value})}><option value="">Selecione</option>{MOTIVOS_DESVIO.map(m=><option key={m}>{m}</option>)}</select></label><label>O que aconteceu?<textarea value={active.ocorrido||''} onChange={e=>upd(active.maquina,{ocorrido:e.target.value})} placeholder="Descreva em poucas palavras"/></label><SkuSelect machine={active.maquina} label="SKU que estava programado" value={active.skuProgramado||''} onChange={v=>upd(active.maquina,{skuProgramado:v})}/></div>}
+      <div className="quickSection"><h4>Programação e produção</h4><label>Seguiu a programação PCP?<div className="choiceButtons"><button type="button" className={active.pcpStatus==='sim'?'selected':''} onClick={e=>{upd(active.maquina,{pcpStatus:'sim'});nextAfterChange(e.currentTarget)}}>Sim</button><button type="button" className={active.pcpStatus==='nao'?'selected dangerChoice':''} onClick={e=>{upd(active.maquina,{pcpStatus:'nao'});nextAfterChange(e.currentTarget)}}>Não</button></div></label>
+      {active.pcpStatus==='nao'&&<div className="conditionalBox dangerBox"><label>Motivo<select value={active.motivo||''} onChange={e=>{upd(active.maquina,{motivo:e.target.value});nextAfterChange(e.currentTarget)}}><option value="">Selecione</option>{MOTIVOS_DESVIO.map(m=><option key={m}>{m}</option>)}</select></label><label>O que aconteceu?<textarea value={active.ocorrido||''} onChange={e=>upd(active.maquina,{ocorrido:e.target.value})} placeholder="Descreva em poucas palavras"/></label><SkuSelect machine={active.maquina} label="SKU que estava programado" value={active.skuProgramado||''} onChange={v=>upd(active.maquina,{skuProgramado:v})}/></div>}
       <SkuSelect machine={active.maquina} label="SKU rodando agora" value={active.skuAtual} onChange={v=>upd(active.maquina,{skuAtual:v})}/>
-      <div className="quickTwoCols"><label>Programado<input inputMode="numeric" value={active.programado} onChange={e=>upd(active.maquina,{programado:e.target.value})} placeholder="Ex.: 12.000 un"/></label><label>Produzido<input inputMode="numeric" value={active.produzido} onChange={e=>upd(active.maquina,{produzido:e.target.value})} placeholder="Ex.: 8.400 un"/></label></div>
+      <div className="quickTwoCols"><label>Programado<input inputMode="numeric" enterKeyHint="next" value={active.programado} onChange={e=>upd(active.maquina,{programado:e.target.value})} onKeyDown={nextOnEnter} placeholder="Ex.: 12.000 un"/></label><label>Produzido<input inputMode="numeric" enterKeyHint="next" value={active.produzido} onChange={e=>upd(active.maquina,{produzido:e.target.value})} onKeyDown={nextOnEnter} placeholder="Ex.: 8.400 un"/></label></div>
       {active.pcpStatus==='sim'?<SkuSelect machine={active.maquina} label="Próximo SKU" value={active.proximosSkus||''} onChange={v=>upd(active.maquina,{proximosSkus:v})}/>:<SkuSelect machine={active.maquina} label="Nova sequência / próximo SKU" value={active.novaSequencia||''} onChange={v=>upd(active.maquina,{novaSequencia:v})}/>}</div>
-      <div className="quickSection"><h4>CIP e parada</h4><div className="quickTwoCols"><label>Último CIP<input type="datetime-local" value={active.ultimoCip} onChange={e=>setLastCip(active.maquina,e.target.value)}/></label><label>Próximo CIP<input readOnly value={active.proximoCip}/></label></div>{active.proximoCip&&<div className={cipExpired?'cipNotice expired':'cipNotice'}>{cipExpired?'CIP vencido — justificativa obrigatória':'CIP dentro do prazo de 72 horas'}</div>}
-      <label>Fez CIP neste turno?<div className="choiceButtons"><button type="button" className={active.fezCip==='sim'?'selected':''} onClick={()=>upd(active.maquina,{fezCip:'sim'})}>Sim</button><button type="button" className={active.fezCip==='nao'?'selected':''} onClick={()=>upd(active.maquina,{fezCip:'nao'})}>Não</button></div></label>
-      <label>A máquina ficou parada por 4 horas ou mais?<div className="choiceButtons"><button type="button" className={active.parada4h==='sim'?'selected dangerChoice':''} onClick={()=>upd(active.maquina,{parada4h:'sim'})}>Sim</button><button type="button" className={active.parada4h==='nao'?'selected':''} onClick={()=>upd(active.maquina,{parada4h:'nao'})}>Não</button></div></label>
-      {active.parada4h==='sim'&&<div className="conditionalBox dangerBox"><div className="quickTwoCols"><label>Início da parada<input type="datetime-local" value={active.paradaInicio||''} onChange={e=>upd(active.maquina,{paradaInicio:e.target.value})}/></label><label>Retorno/previsão<input type="datetime-local" value={active.paradaFim||''} onChange={e=>upd(active.maquina,{paradaFim:e.target.value})}/></label></div><label>Motivo da parada<input value={active.paradaMotivo||''} onChange={e=>upd(active.maquina,{paradaMotivo:e.target.value})} placeholder="Ex.: manutenção"/></label><label>CIP de renovação realizado?<select value={active.cipRenovacao||''} onChange={e=>upd(active.maquina,{cipRenovacao:e.target.value as any})}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></label></div>}
+      <div className="quickSection"><h4>CIP e parada</h4><div className="quickTwoCols"><label>Último CIP<input type="datetime-local" value={active.ultimoCip} onChange={e=>{setLastCip(active.maquina,e.target.value);nextAfterChange(e.currentTarget)}}/></label><label>Próximo CIP<input readOnly value={active.proximoCip}/></label></div>{active.proximoCip&&<div className={cipExpired?'cipNotice expired':'cipNotice'}>{cipExpired?'CIP vencido — justificativa obrigatória':'CIP dentro do prazo de 72 horas'}</div>}
+      <label>Fez CIP neste turno?<div className="choiceButtons"><button type="button" className={active.fezCip==='sim'?'selected':''} onClick={e=>{upd(active.maquina,{fezCip:'sim'});nextAfterChange(e.currentTarget)}}>Sim</button><button type="button" className={active.fezCip==='nao'?'selected':''} onClick={e=>{upd(active.maquina,{fezCip:'nao'});nextAfterChange(e.currentTarget)}}>Não</button></div></label>
+      <label>A máquina ficou parada por 4 horas ou mais?<div className="choiceButtons"><button type="button" className={active.parada4h==='sim'?'selected dangerChoice':''} onClick={e=>{upd(active.maquina,{parada4h:'sim'});nextAfterChange(e.currentTarget)}}>Sim</button><button type="button" className={active.parada4h==='nao'?'selected':''} onClick={e=>{upd(active.maquina,{parada4h:'nao'});nextAfterChange(e.currentTarget)}}>Não</button></div></label>
+      {active.parada4h==='sim'&&<div className="conditionalBox dangerBox"><div className="quickTwoCols"><label>Início da parada<input type="datetime-local" value={active.paradaInicio||''} onChange={e=>{upd(active.maquina,{paradaInicio:e.target.value});nextAfterChange(e.currentTarget)}}/></label><label>Retorno/previsão<input type="datetime-local" value={active.paradaFim||''} onChange={e=>{upd(active.maquina,{paradaFim:e.target.value});nextAfterChange(e.currentTarget)}}/></label></div><label>Motivo da parada<input value={active.paradaMotivo||''} onChange={e=>upd(active.maquina,{paradaMotivo:e.target.value})} onKeyDown={nextOnEnter} enterKeyHint="next" placeholder="Ex.: manutenção"/></label><label>CIP de renovação realizado?<select value={active.cipRenovacao||''} onChange={e=>{upd(active.maquina,{cipRenovacao:e.target.value as any});nextAfterChange(e.currentTarget)}}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></label></div>}
       {(cipExpired||(active.parada4h==='sim'&&active.cipRenovacao==='nao'))&&<label>Justificativa do CIP<textarea value={active.cipMotivo||''} onChange={e=>upd(active.maquina,{cipMotivo:e.target.value})} placeholder="Informe por que o CIP ficou fora do prazo ou não foi realizado"/></label>}</div>
       <div className="quickSection"><h4>Comunicação do turno</h4><label>Pessoas / trocas / avisos<textarea value={active.pessoas||''} onChange={e=>upd(active.maquina,{pessoas:e.target.value})} placeholder="Registre somente se houver"/></label><button type="button" className="quickFill" onClick={()=>upd(active.maquina,{pessoas:'Sem trocas/avisos.'})}>Sem avisos</button><label>Observações da máquina<textarea value={active.observacoes} onChange={e=>upd(active.maquina,{observacoes:e.target.value})} placeholder="O que o próximo turno precisa saber?"/></label><button type="button" className="quickFill" onClick={()=>upd(active.maquina,{observacoes:'Sem observações.'})}>Sem observações</button></div>
       <div className="quickActions"><button type="button" className="secondary" disabled={entries.findIndex(e=>e.maquina===active.maquina)===0} onClick={()=>{const i=entries.findIndex(e=>e.maquina===active.maquina);if(i>0)setActiveMachine(entries[i-1].maquina)}}>Anterior</button><button type="button" className="primary" onClick={saveAndNext}>{entries.findIndex(e=>e.maquina===active.maquina)===entries.length-1?'Validar máquina':'Salvar e próxima'}</button></div>

@@ -1,13 +1,22 @@
-# V6.7.3 — Runtime Safe
+# V6.7.3 — Correção definitiva da tela branca
 
-Causa confirmada da tela branca: o cliente Supabase era criado com URL/chave
-vazias quando as variáveis do Cloudflare não chegavam ao build. O SDK lançava
-uma exceção antes de o React renderizar a tela.
+## Causa confirmada
+O SDK do Supabase interrompia a inicialização do React quando as variáveis
+`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` não chegavam ao build.
+O erro acontecia antes da primeira tela ser renderizada.
 
-Correções:
+## Correções
 - inicialização segura do Supabase;
-- interface abre em modo local mesmo sem variáveis;
-- aviso claro no login em vez de tela branca;
-- Error Boundary para diagnóstico de qualquer falha futura;
-- Service Worker com nova versão de cache;
-- nenhuma regra funcional da V6.7.2 foi removida.
+- aplicativo abre mesmo sem variáveis, em modo local/offline;
+- aviso claro no login quando o build não recebeu a configuração;
+- Error Boundary para nunca mais exibir tela branca sem diagnóstico;
+- cache do Service Worker versionado para a nova publicação;
+- nenhuma alteração nas regras funcionais da V6.7.2.
+
+## Cloudflare
+- Build command: `pnpm run build`
+- Build output: `dist`
+- Root directory: vazio
+
+As variáveis do Supabase continuam necessárias para sincronização online, mas a
+falta delas não derruba mais a interface.
