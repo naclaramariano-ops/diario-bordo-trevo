@@ -32,7 +32,7 @@ export async function login(usuario:string, senha:string):Promise<Usuario>{
 
     const {senha_hash:_, ...u}=data;
     localStorage.setItem(SESSION_KEY,JSON.stringify(u));
-    await put('session',{id:'current',...u});
+    await put('session',{...u,id:'current'});
     return u as Usuario;
   }
 

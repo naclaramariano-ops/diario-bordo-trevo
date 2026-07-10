@@ -37,3 +37,15 @@ A lista suspensa de SKU é específica por máquina, em ordem alfabética, com *
 - Campos de SKU são pesquisáveis e mostram somente SKUs permitidos para a máquina.
 - `Sem Programação` aparece no topo de todas as listas.
 - Demais SKUs aparecem em ordem alfabética.
+
+## Versão 6.5.1 — build estabilizado
+
+Esta entrega usa dependências fixadas e foi validada com instalação limpa e build de produção.
+
+No Cloudflare Pages use:
+
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Root directory: vazio
+
+Não envie `node_modules`, `dist` ou um `package-lock.json` antigo ao GitHub.

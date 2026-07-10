@@ -42,7 +42,7 @@ function focusNextControl(current:HTMLElement|null){
     .filter(el=>!el.hasAttribute('disabled')&&el.offsetParent!==null);
   const idx=controls.indexOf(current);
   if(idx>=0&&idx<controls.length-1){
-    setTimeout(()=>{controls[idx+1].focus(); if(controls[idx+1] instanceof HTMLInputElement) controls[idx+1].select?.();},80);
+    setTimeout(()=>{const nextControl=controls[idx+1]; nextControl.focus(); if(nextControl instanceof HTMLInputElement) nextControl.select();},80);
   }
 }
 function SkuSelect({value,onChange,label,machine,autoAdvance=false}:{value:string;onChange:(v:string)=>void;label:string;machine:string;autoAdvance?:boolean}){
