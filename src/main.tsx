@@ -55,21 +55,42 @@ function SkuSelect({value,onChange,label,machine,autoAdvance=false}:{value:strin
     if(!q)return options;
     return options.filter(item=>item.toLocaleLowerCase('pt-BR').includes(q));
   },[options,query]);
-  function choose(item:string,input?:HTMLInputElement|null){
-    setQuery(item);setOpen(false);onChange(item);
-    if(autoAdvance&&input)setTimeout(()=>focusNextControl(input),100);
+  function choose(item:string,input:HTMLInputElement|null){
+    setQuery(item);
+    setOpen(false);
+    onChange(item);
+    if(autoAdvance&&input)focusNextControl(input);
   }
-  const inputRef=React.useRef<HTMLInputElement|null>(null);
   return <label className="skuField">{label}<div className="skuCombo"><input
-    ref={inputRef}
     value={query}
-    placeholder="Toque para selecionar o SKU"
+    placeholder="Digite para pesquisar ou toque para listar"
     autoComplete="off"
-    readOnly
-    onClick={()=>setOpen(true)}
     onFocus={()=>setOpen(true)}
+    onChange={e=>{setQuery(e.target.value);setOpen(true)}}
+    onKeyDown={e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        const exact=options.find(item=>item.toLocaleLowerCase('pt-BR')===query.trim().toLocaleLowerCase('pt-BR'));
+        const choice=exact||filtered[0];
+        if(choice)choose(choice,e.currentTarget);
+      }
+      if(e.key==='Escape')setOpen(false);
+    }}
+    onBlur={e=>{
+      setTimeout(()=>{
+        setOpen(false);
+        if(query&& !options.includes(query))setQuery(value||'');
+      },140);
+    }}
     aria-expanded={open}
-  /><button type="button" className="skuTrigger" onClick={()=>setOpen(true)} aria-label={`Selecionar ${label}`}>⌄</button></div>{open&&<div className="skuModal" role="dialog" aria-modal="true"><div className="skuModalBackdrop" onClick={()=>setOpen(false)}/><div className="skuModalPanel"><div className="skuModalHead"><div><b>{label}</b><span>{machine}</span></div><button type="button" className="iconBtn" onClick={()=>setOpen(false)}><X size={20}/></button></div><div className="skuSearch"><Search size={18}/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder="Pesquisar por nome ou código..."/></div><div className="skuOptions" role="listbox">{filtered.length?filtered.map(item=><button type="button" key={item} className={item==='Sem Programação'?'skuOption noSchedule':'skuOption'} onClick={()=>choose(item,inputRef.current)}>{item}</button>):<div className="skuEmpty">Nenhum SKU disponível para esta máquina.</div>}</div></div></div>}</label>
+    aria-autocomplete="list"
+  />{open&&<div className="skuDropdown" role="listbox">{filtered.length?filtered.map(item=><button
+      type="button"
+      key={item}
+      className={item==='Sem Programação'?'skuOption noSchedule':'skuOption'}
+      onMouseDown={e=>e.preventDefault()}
+      onClick={e=>choose(item,e.currentTarget.parentElement?.previousElementSibling as HTMLInputElement|null)}
+    >{item}</button>):<div className="skuEmpty">Nenhum SKU disponível para esta máquina.</div>}</div>}</div></label>
 }
 
 function operationalItems(diarios:Diario[], period?:(d:Diario)=>boolean):OperationalItem[]{const list:OperationalItem[]=[];diarios.filter(d=>period?period(d):true).forEach(d=>{const p=parsePassagem(d);if(!p)return;p.maquinas.forEach(m=>{const c=classifyMachine(m);list.push({record:d,payload:p,machine:m,status:c.status,reason:c.reason,turno:p.turno,area:p.area,machineName:m.maquina,criadoEm:p.criadoEm,lider:p.lider})})});return list.sort((a,b)=>new Date(b.criadoEm).getTime()-new Date(a.criadoEm).getTime())}
@@ -81,46 +102,102 @@ function OperationalBoard({items,title='Quadro operacional'}:{items:OperationalI
 function HomePage({tick}:{tick:number}){const[diarios,setD]=useState<Diario[]>([]);useEffect(()=>{listDiarios().then(setD)},[tick]);const hoje=new Date().toISOString().slice(0,10);const items=latestItems(operationalItems(diarios,d=>d.data===hoje));return <section className="page"><div className="pageTitle"><h2>Hoje</h2><p>Passagem real de turno: o que aconteceu em cada máquina, por turno.</p></div><OperationalBoard items={items} title="Hoje — Envase"/></section>}
 function newEntry(machine:string):MachineEntry{return{maquina:machine,pcpStatus:'sim',skuAtual:'',programado:'',produzido:'',proximosSkus:'',ultimoCip:'',proximoCip:'',fezCip:'nao',parada4h:'nao',observacoes:'',pessoas:''}}
 function NovoDiario({onSaved}:{onSaved:()=>void}){
-  const DRAFT_KEY='dbt_v651_novo_draft';
-  const steps=['PCP','Produção','CIP','Comunicação'];
-  const savedDraft=useMemo(()=>{try{return JSON.parse(localStorage.getItem(DRAFT_KEY)||'null')}catch{return null}},[]);
-  const draftArea:AreaEnvase=savedDraft?.area==='Envase 2'?'Envase 2':'Envase 1';
-  const[area,setArea]=useState<AreaEnvase>(draftArea);
-  const[turno,setTurno]=useState(savedDraft?.turno||'1º Turno');
-  const[data,setData]=useState(savedDraft?.data||new Date().toISOString().slice(0,10));
-  const[obs,setObs]=useState(savedDraft?.obs||'');
-  const[entries,setEntries]=useState<MachineEntry[]>(savedDraft?.entries||DEFAULT_MACHINES[draftArea].map(newEntry));
-  const[machineIndex,setMachineIndex]=useState(savedDraft?.machineIndex||0);
-  const[step,setStep]=useState(savedDraft?.step||0);
-  const[error,setError]=useState('');
-  const[saving,setSaving]=useState(false);
-  const current=entries[machineIndex]||entries[0];
-  useEffect(()=>{localStorage.setItem(DRAFT_KEY,JSON.stringify({area,turno,data,obs,entries,machineIndex,step}))},[area,turno,data,obs,entries,machineIndex,step]);
-  function changeArea(a:AreaEnvase){setArea(a);setEntries(DEFAULT_MACHINES[a].map(newEntry));setMachineIndex(0);setStep(0);setError('')}
+  const[area,setArea]=useState<AreaEnvase>('Envase 1'),[turno,setTurno]=useState('1º Turno'),[data,setData]=useState(new Date().toISOString().slice(0,10)),[obs,setObs]=useState(''),[entries,setEntries]=useState<MachineEntry[]>(DEFAULT_MACHINES['Envase 1'].map(newEntry)),[activeMachine,setActiveMachine]=useState(DEFAULT_MACHINES['Envase 1'][0]),[error,setError]=useState('');
+  const active=entries.find(e=>e.maquina===activeMachine)||entries[0];
+  function changeArea(a:AreaEnvase){setArea(a);const next=DEFAULT_MACHINES[a].map(newEntry);setEntries(next);setActiveMachine(next[0].maquina);setError('')}
   function upd(machine:string,patch:Partial<MachineEntry>){setEntries(es=>es.map(e=>e.maquina===machine?{...e,...patch}:e))}
   function setLastCip(machine:string,val:string){upd(machine,{ultimoCip:val,proximoCip:plusHoursLocal(val,72)})}
-  function requiredForStep(e:MachineEntry,n:number){
-    if(n===0){if(!e.pcpStatus)return'Selecione se seguiu o PCP';if(e.pcpStatus==='nao'){if(!e.motivo)return'Selecione o motivo';if(!e.ocorrido)return'Descreva o que aconteceu';if(!e.skuProgramado)return'Selecione o SKU programado'}}
-    if(n===1){if(!e.skuAtual)return'Selecione o SKU rodando';if(!e.programado)return'Informe o programado';if(!e.produzido)return'Informe o produzido';if(e.pcpStatus==='sim'&&!e.proximosSkus)return'Selecione o próximo SKU';if(e.pcpStatus==='nao'&&!e.novaSequencia)return'Selecione a nova sequência'}
-    if(n===2){if(!e.ultimoCip)return'Informe o último CIP';if(!e.proximoCip)return'Próximo CIP não calculado';if(!e.fezCip)return'Informe se fez CIP';if(!e.parada4h)return'Informe se houve parada ≥4h';if(e.parada4h==='sim'){if(!e.paradaInicio)return'Informe o início da parada';if(!e.paradaFim)return'Informe o retorno/previsão';if(!e.paradaMotivo)return'Informe o motivo da parada';if(!e.cipRenovacao)return'Informe se fez CIP de renovação';if(e.cipRenovacao==='nao'&&!e.cipMotivo)return'Justifique a não realização do CIP'}const expired=e.proximoCip&&new Date(e.proximoCip)<new Date();if(expired&&!e.cipMotivo)return'Justifique o CIP vencido/fora do prazo'}
-    if(n===3){if(!e.pessoas)return'Informe pessoas/trocas ou “Sem trocas/avisos”';if(!e.observacoes)return'Informe observações ou “Sem observações”'}
+  function missingFor(e:MachineEntry){
+    if(!e.pcpStatus)return'Selecione PCP';
+    if(e.pcpStatus==='sim'){
+      if(!e.skuAtual)return'Informe SKU atual';
+      if(!e.programado)return'Informe programado';
+      if(!e.produzido)return'Informe produzido';
+      if(!e.proximosSkus)return'Informe próximo SKU';
+    }else{
+      if(!e.motivo)return'Informe motivo';
+      if(!e.ocorrido)return'Descreva ocorrido';
+      if(!e.skuAtual)return'Informe SKU atual';
+      if(!e.skuProgramado)return'Informe SKU programado';
+      if(!e.programado)return'Informe programado';
+      if(!e.produzido)return'Informe produzido';
+      if(!e.novaSequencia)return'Informe nova sequência';
+    }
+    if(!e.ultimoCip)return'Informe último CIP';
+    if(!e.proximoCip)return'Próximo CIP não calculado';
+    if(!e.fezCip)return'Informe se fez CIP';
+    if(!e.parada4h)return'Informe parada ≥4h';
+    if(e.parada4h==='sim'){
+      if(!e.paradaInicio)return'Informe início da parada';
+      if(!e.paradaFim)return'Informe retorno/previsão';
+      if(!e.paradaMotivo)return'Informe motivo da parada';
+      if(!e.cipRenovacao)return'Informe CIP de renovação';
+      if(e.cipRenovacao==='nao'&&!e.cipMotivo)return'Justifique não realizar CIP de renovação';
+    }
+    const expired=e.proximoCip&&new Date(e.proximoCip)<new Date();
+    if(expired&&!e.cipMotivo)return'Justifique CIP vencido/fora do prazo';
+    if(!e.pessoas)return'Informe pessoas/trocas ou use “Sem avisos”';
+    if(!e.observacoes)return'Informe observações ou use “Sem observações”';
     return''
   }
-  function machineComplete(e:MachineEntry){return steps.every((_,i)=>!requiredForStep(e,i))}
-  function focusFirstInvalid(){setTimeout(()=>{const root=document.querySelector('.wizardStage');const el=root?.querySelector<HTMLElement>('input:invalid,select:invalid,textarea:invalid,input[value=""],textarea:empty');(el||root)?.scrollIntoView({behavior:'smooth',block:'center'});el?.focus?.()},100)}
-  function next(){const msg=requiredForStep(current,step);if(msg){setError(msg);focusFirstInvalid();return}setError('');if(step<steps.length-1){setStep(step+1);window.scrollTo({top:0,behavior:'smooth'});return}if(machineIndex<entries.length-1){setMachineIndex(machineIndex+1);setStep(0);window.scrollTo({top:0,behavior:'smooth'});return}}
-  function back(){setError('');if(step>0){setStep(step-1);return}if(machineIndex>0){setMachineIndex(machineIndex-1);setStep(steps.length-1)}}
-  function goTo(machine:number,stage=0){setMachineIndex(machine);setStep(stage);setError('');window.scrollTo({top:0,behavior:'smooth'})}
-  async function salvar(){for(let mi=0;mi<entries.length;mi++){for(let si=0;si<steps.length;si++){const msg=requiredForStep(entries[mi],si);if(msg){goTo(mi,si);setError(`${entries[mi].maquina}: ${msg}`);return}}}setSaving(true);try{const me=currentUser()!;const payload:PassagemV6={version:'v6-envase',area,turno,data,lider:me.nome,liderId:me.id,criadoEm:new Date().toISOString(),maquinas:entries,observacoesGerais:obs||'Sem observações gerais.'};await saveDiario({data,turno,setor_nome:area,lider_id:me.id,lider_nome:me.nome,status:'Finalizado',resumo:V6_PREFIX+JSON.stringify(payload)});localStorage.removeItem(DRAFT_KEY);onSaved()}finally{setSaving(false)}}
-  const progress=Math.round(((machineIndex*steps.length+step+1)/(entries.length*steps.length))*100);
-  return <section className="page newPassageWizard"><div className="wizardTop"><div><span className="wizardEyebrow">Nova passagem de turno</span><h2>{current.maquina}</h2><p>{area} • {turno} • Etapa {step+1} de {steps.length}</p></div><div className="wizardProgressCircle">{progress}%</div></div><div className="wizardProgress"><span style={{width:`${progress}%`}}/></div><div className="wizardSetup"><label>Data<input type="date" value={data} onChange={e=>setData(e.target.value)}/></label><label>Turno<select value={turno} onChange={e=>setTurno(e.target.value)}><option>1º Turno</option><option>2º Turno</option><option>3º Turno</option></select></label><div className="opSwitch"><button className={area==='Envase 1'?'active':''} onClick={()=>changeArea('Envase 1')}>Envase 1</button><button className={area==='Envase 2'?'active':''} onClick={()=>changeArea('Envase 2')}>Envase 2</button></div></div><div className="machineStrip" aria-label="Máquinas">{entries.map((e,i)=><button key={e.maquina} onClick={()=>goTo(i,0)} className={(i===machineIndex?'active ':'')+(machineComplete(e)?'done':'')}><span>{i+1}</span><b>{e.maquina}</b>{machineComplete(e)&&<CheckCircle2 size={16}/>}</button>)}</div><div className="wizardSteps">{steps.map((s,i)=><button key={s} className={i===step?'active':i<step?'done':''} onClick={()=>goTo(machineIndex,i)}><span>{i+1}</span>{s}</button>)}</div>{error&&<div className="err wizardError">{error}</div>}<div className="card wizardStage">
-    {step===0&&<><div className="stageHeader"><ShieldCheck/><div><h3>Programação PCP</h3><p>Registre rapidamente se a sequência foi seguida.</p></div></div><label>Seguiu a programação PCP?<select value={current.pcpStatus} onChange={e=>{upd(current.maquina,{pcpStatus:e.target.value as PcpStatus});setTimeout(()=>focusNextControl(e.currentTarget),80)}}><option value="sim">Sim, conforme PCP</option><option value="nao">Não, houve alteração</option></select></label>{current.pcpStatus==='nao'&&<div className="conditionalPanel"><label>Motivo<select required value={current.motivo||''} onChange={e=>{upd(current.maquina,{motivo:e.target.value});setTimeout(()=>focusNextControl(e.currentTarget),80)}}><option value="">Selecione</option>{MOTIVOS_DESVIO.map(m=><option key={m}>{m}</option>)}</select></label><label>O que aconteceu?<textarea required value={current.ocorrido||''} onChange={e=>upd(current.maquina,{ocorrido:e.target.value})} placeholder="Descreva em poucas palavras"/></label><SkuSelect machine={current.maquina} label="SKU programado" value={current.skuProgramado||''} onChange={v=>upd(current.maquina,{skuProgramado:v})} autoAdvance/></div>}</>}
-    {step===1&&<><div className="stageHeader"><Factory/><div><h3>Produção</h3><p>SKU atual, programado, produzido e sequência.</p></div></div><SkuSelect machine={current.maquina} label="SKU rodando" value={current.skuAtual} onChange={v=>upd(current.maquina,{skuAtual:v})} autoAdvance/><div className="quantityGrid"><label>Programado<input required inputMode="decimal" value={current.programado} onChange={e=>upd(current.maquina,{programado:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();focusNextControl(e.currentTarget)}}} placeholder="Ex.: 12.000 un"/></label><label>Produzido<input required inputMode="decimal" value={current.produzido} onChange={e=>upd(current.maquina,{produzido:e.target.value})} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();focusNextControl(e.currentTarget)}}} placeholder="Ex.: 8.450 un"/></label></div>{current.pcpStatus==='sim'?<SkuSelect machine={current.maquina} label="Próximo SKU" value={current.proximosSkus||''} onChange={v=>upd(current.maquina,{proximosSkus:v})} autoAdvance/>:<SkuSelect machine={current.maquina} label="Nova sequência / próximo SKU" value={current.novaSequencia||''} onChange={v=>upd(current.maquina,{novaSequencia:v})} autoAdvance/>}</>}
-    {step===2&&<><div className="stageHeader"><RefreshCcw/><div><h3>CIP e parada</h3><p>Validade de 72h e renovação após parada contínua.</p></div></div><div className="cipGrid"><label>Último CIP<input required type="datetime-local" value={current.ultimoCip} onChange={e=>setLastCip(current.maquina,e.target.value)}/></label><label>Próximo CIP<input readOnly value={current.proximoCip}/></label></div>{current.proximoCip&&<div className={(new Date(current.proximoCip)<new Date())?'cipStatus danger':'cipStatus ok'}>{new Date(current.proximoCip)<new Date()?'CIP vencido — justificativa obrigatória':'CIP dentro do prazo'}</div>}<div className="choiceGrid"><label>Fez CIP?<select value={current.fezCip} onChange={e=>upd(current.maquina,{fezCip:e.target.value as any})}><option value="nao">Não</option><option value="sim">Sim</option></select></label><label>Parou por 4h ou mais?<select value={current.parada4h} onChange={e=>upd(current.maquina,{parada4h:e.target.value as any})}><option value="nao">Não</option><option value="sim">Sim</option></select></label></div>{current.parada4h==='sim'&&<div className="conditionalPanel"><div className="cipGrid"><label>Início da parada<input required type="datetime-local" value={current.paradaInicio||''} onChange={e=>upd(current.maquina,{paradaInicio:e.target.value})}/></label><label>Retorno/previsão<input required type="datetime-local" value={current.paradaFim||''} onChange={e=>upd(current.maquina,{paradaFim:e.target.value})}/></label></div><label>Motivo da parada<input required value={current.paradaMotivo||''} onChange={e=>upd(current.maquina,{paradaMotivo:e.target.value})}/></label><label>CIP de renovação realizado?<select required value={current.cipRenovacao||''} onChange={e=>upd(current.maquina,{cipRenovacao:e.target.value as any})}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></label></div>}<label>Justificativa do CIP, quando aplicável<textarea value={current.cipMotivo||''} onChange={e=>upd(current.maquina,{cipMotivo:e.target.value})} placeholder="Obrigatório quando vencido ou renovação não realizada"/></label></>}
-    {step===3&&<><div className="stageHeader"><Users/><div><h3>Comunicação do turno</h3><p>Registre apenas o essencial para o próximo líder.</p></div></div><label>Pessoas, trocas e avisos<textarea required value={current.pessoas||''} onChange={e=>upd(current.maquina,{pessoas:e.target.value})} placeholder="Ex.: Sem trocas/avisos"/></label><button type="button" className="quickFill" onClick={()=>upd(current.maquina,{pessoas:'Sem trocas/avisos.'})}>Sem trocas/avisos</button><label>Observações da máquina<textarea required value={current.observacoes} onChange={e=>upd(current.maquina,{observacoes:e.target.value})} placeholder="Ex.: Sem observações"/></label><button type="button" className="quickFill" onClick={()=>upd(current.maquina,{observacoes:'Sem observações.'})}>Sem observações</button></>}
-  </div><div className="wizardActions"><button type="button" className="secondary" onClick={back} disabled={machineIndex===0&&step===0}>Voltar</button>{machineIndex===entries.length-1&&step===steps.length-1?<button type="button" className="primary" onClick={salvar} disabled={saving}>{saving?'Salvando...':'Finalizar passagem'}</button>:<button type="button" className="primary" onClick={next}>Continuar</button>}</div><details className="generalNotes"><summary>Observações gerais da passagem</summary><textarea value={obs} onChange={e=>setObs(e.target.value)} placeholder="Resumo geral do turno, se houver."/></details><p className="draftHint">Rascunho salvo automaticamente neste dispositivo.</p></section>
+  const completed=entries.filter(e=>!missingFor(e)).length;
+  function focusFirstMissing(machine:MachineEntry){
+    const msg=missingFor(machine);if(!msg)return true;
+    setError(`${machine.maquina}: ${msg}`);
+    setActiveMachine(machine.maquina);
+    setTimeout(()=>{
+      const card=document.querySelector<HTMLElement>(`[data-machine-form="${CSS.escape(machine.maquina)}"]`);
+      const controls=Array.from(card?.querySelectorAll<HTMLElement>('input,select,textarea')||[]).filter(x=>x.offsetParent!==null);
+      const target=controls.find(el=>{
+        if(el instanceof HTMLInputElement||el instanceof HTMLTextAreaElement)return !el.value.trim()&&!el.hasAttribute('readonly');
+        if(el instanceof HTMLSelectElement)return !el.value;
+        return false
+      });
+      (target||card)?.scrollIntoView({behavior:'smooth',block:'center'});target?.focus();
+    },120);return false
+  }
+  function saveAndNext(){
+    setError('');if(!focusFirstMissing(active))return;
+    const idx=entries.findIndex(e=>e.maquina===active.maquina);
+    if(idx<entries.length-1){setActiveMachine(entries[idx+1].maquina);setTimeout(()=>document.querySelector('.quickFormCard')?.scrollIntoView({behavior:'smooth',block:'start'}),80)}
+  }
+  async function salvar(){
+    setError('');
+    for(const e of entries){if(!focusFirstMissing(e))return}
+    const me=currentUser()!;
+    const payload:PassagemV6={version:'v6-envase',area,turno,data,lider:me.nome,liderId:me.id,criadoEm:new Date().toISOString(),maquinas:entries,observacoesGerais:obs||'Sem observações gerais.'};
+    await saveDiario({data,turno,setor_nome:area,lider_id:me.id,lider_nome:me.nome,status:'Finalizado',resumo:V6_PREFIX+JSON.stringify(payload)});
+    onSaved()
+  }
+  const cipExpired=!!active.proximoCip&&new Date(active.proximoCip)<new Date();
+  return <section className="page novoQuickPage">
+    <div className="pageTitle"><h2>Nova passagem</h2><p>Uma máquina por vez. Responda somente o necessário e avance.</p></div>
+    {error&&<div className="err v6Error">{error}</div>}
+    <div className="quickTopCard">
+      <div className="quickMeta"><label>Data<input type="date" value={data} onChange={e=>setData(e.target.value)}/></label><label>Turno<select value={turno} onChange={e=>setTurno(e.target.value)}><option>1º Turno</option><option>2º Turno</option><option>3º Turno</option></select></label></div>
+      <div className="opSwitch quickArea"><button type="button" className={area==='Envase 1'?'active':''} onClick={()=>changeArea('Envase 1')}>Envase 1</button><button type="button" className={area==='Envase 2'?'active':''} onClick={()=>changeArea('Envase 2')}>Envase 2</button></div>
+      <div className="quickProgress"><div><b>{completed} de {entries.length}</b><span>máquinas concluídas</span></div><div className="progressTrack"><i style={{width:`${(completed/entries.length)*100}%`}}/></div></div>
+    </div>
+    <div className="machineScroller" aria-label="Máquinas">{entries.map(e=><button type="button" key={e.maquina} className={(activeMachine===e.maquina?'active ':'')+(!missingFor(e)?'done':'')} onClick={()=>{setActiveMachine(e.maquina);setError('')}}><span>{e.maquina}</span><small>{!missingFor(e)?'✓ pronto':'preencher'}</small></button>)}</div>
+    <div className="quickFormCard" data-machine-form={active.maquina}>
+      <div className="quickFormHeader"><div><small>{area} • {turno}</small><h3>{active.maquina}</h3></div><span className={!missingFor(active)?'quickBadge done':'quickBadge'}>{!missingFor(active)?'Concluída':'Em preenchimento'}</span></div>
+      <div className="quickSection"><h4>Programação e produção</h4><label>Seguiu a programação PCP?<div className="choiceButtons"><button type="button" className={active.pcpStatus==='sim'?'selected':''} onClick={()=>upd(active.maquina,{pcpStatus:'sim'})}>Sim</button><button type="button" className={active.pcpStatus==='nao'?'selected dangerChoice':''} onClick={()=>upd(active.maquina,{pcpStatus:'nao'})}>Não</button></div></label>
+      {active.pcpStatus==='nao'&&<div className="conditionalBox dangerBox"><label>Motivo<select value={active.motivo||''} onChange={e=>upd(active.maquina,{motivo:e.target.value})}><option value="">Selecione</option>{MOTIVOS_DESVIO.map(m=><option key={m}>{m}</option>)}</select></label><label>O que aconteceu?<textarea value={active.ocorrido||''} onChange={e=>upd(active.maquina,{ocorrido:e.target.value})} placeholder="Descreva em poucas palavras"/></label><SkuSelect machine={active.maquina} label="SKU que estava programado" value={active.skuProgramado||''} onChange={v=>upd(active.maquina,{skuProgramado:v})}/></div>}
+      <SkuSelect machine={active.maquina} label="SKU rodando agora" value={active.skuAtual} onChange={v=>upd(active.maquina,{skuAtual:v})}/>
+      <div className="quickTwoCols"><label>Programado<input inputMode="numeric" value={active.programado} onChange={e=>upd(active.maquina,{programado:e.target.value})} placeholder="Ex.: 12.000 un"/></label><label>Produzido<input inputMode="numeric" value={active.produzido} onChange={e=>upd(active.maquina,{produzido:e.target.value})} placeholder="Ex.: 8.400 un"/></label></div>
+      {active.pcpStatus==='sim'?<SkuSelect machine={active.maquina} label="Próximo SKU" value={active.proximosSkus||''} onChange={v=>upd(active.maquina,{proximosSkus:v})}/>:<SkuSelect machine={active.maquina} label="Nova sequência / próximo SKU" value={active.novaSequencia||''} onChange={v=>upd(active.maquina,{novaSequencia:v})}/>}</div>
+      <div className="quickSection"><h4>CIP e parada</h4><div className="quickTwoCols"><label>Último CIP<input type="datetime-local" value={active.ultimoCip} onChange={e=>setLastCip(active.maquina,e.target.value)}/></label><label>Próximo CIP<input readOnly value={active.proximoCip}/></label></div>{active.proximoCip&&<div className={cipExpired?'cipNotice expired':'cipNotice'}>{cipExpired?'CIP vencido — justificativa obrigatória':'CIP dentro do prazo de 72 horas'}</div>}
+      <label>Fez CIP neste turno?<div className="choiceButtons"><button type="button" className={active.fezCip==='sim'?'selected':''} onClick={()=>upd(active.maquina,{fezCip:'sim'})}>Sim</button><button type="button" className={active.fezCip==='nao'?'selected':''} onClick={()=>upd(active.maquina,{fezCip:'nao'})}>Não</button></div></label>
+      <label>A máquina ficou parada por 4 horas ou mais?<div className="choiceButtons"><button type="button" className={active.parada4h==='sim'?'selected dangerChoice':''} onClick={()=>upd(active.maquina,{parada4h:'sim'})}>Sim</button><button type="button" className={active.parada4h==='nao'?'selected':''} onClick={()=>upd(active.maquina,{parada4h:'nao'})}>Não</button></div></label>
+      {active.parada4h==='sim'&&<div className="conditionalBox dangerBox"><div className="quickTwoCols"><label>Início da parada<input type="datetime-local" value={active.paradaInicio||''} onChange={e=>upd(active.maquina,{paradaInicio:e.target.value})}/></label><label>Retorno/previsão<input type="datetime-local" value={active.paradaFim||''} onChange={e=>upd(active.maquina,{paradaFim:e.target.value})}/></label></div><label>Motivo da parada<input value={active.paradaMotivo||''} onChange={e=>upd(active.maquina,{paradaMotivo:e.target.value})} placeholder="Ex.: manutenção"/></label><label>CIP de renovação realizado?<select value={active.cipRenovacao||''} onChange={e=>upd(active.maquina,{cipRenovacao:e.target.value as any})}><option value="">Selecione</option><option value="sim">Sim</option><option value="nao">Não</option></select></label></div>}
+      {(cipExpired||(active.parada4h==='sim'&&active.cipRenovacao==='nao'))&&<label>Justificativa do CIP<textarea value={active.cipMotivo||''} onChange={e=>upd(active.maquina,{cipMotivo:e.target.value})} placeholder="Informe por que o CIP ficou fora do prazo ou não foi realizado"/></label>}</div>
+      <div className="quickSection"><h4>Comunicação do turno</h4><label>Pessoas / trocas / avisos<textarea value={active.pessoas||''} onChange={e=>upd(active.maquina,{pessoas:e.target.value})} placeholder="Registre somente se houver"/></label><button type="button" className="quickFill" onClick={()=>upd(active.maquina,{pessoas:'Sem trocas/avisos.'})}>Sem avisos</button><label>Observações da máquina<textarea value={active.observacoes} onChange={e=>upd(active.maquina,{observacoes:e.target.value})} placeholder="O que o próximo turno precisa saber?"/></label><button type="button" className="quickFill" onClick={()=>upd(active.maquina,{observacoes:'Sem observações.'})}>Sem observações</button></div>
+      <div className="quickActions"><button type="button" className="secondary" disabled={entries.findIndex(e=>e.maquina===active.maquina)===0} onClick={()=>{const i=entries.findIndex(e=>e.maquina===active.maquina);if(i>0)setActiveMachine(entries[i-1].maquina)}}>Anterior</button><button type="button" className="primary" onClick={saveAndNext}>{entries.findIndex(e=>e.maquina===active.maquina)===entries.length-1?'Validar máquina':'Salvar e próxima'}</button></div>
+    </div>
+    <label className="card generalObs">Observações gerais da passagem<textarea value={obs} onChange={e=>setObs(e.target.value)} placeholder="Resumo geral do turno, se houver."/></label>
+    <button className="primary finishPassage" onClick={salvar}>Finalizar passagem de turno</button>
+  </section>
 }
-
 function Historico(){const[ds,setD]=useState<Diario[]>([]),[modo,setModo]=useState<'dia'|'semana'|'mes'>('dia');useEffect(()=>{listDiarios().then(setD)},[]);const now=new Date();function period(d:Diario){const dt=new Date(d.data+'T00:00:00');if(modo==='dia')return d.data===now.toISOString().slice(0,10);if(modo==='mes')return dt.getMonth()===now.getMonth()&&dt.getFullYear()===now.getFullYear();const diff=(now.getTime()-dt.getTime())/(1000*60*60*24);return diff>=0&&diff<7}const items=latestItems(operationalItems(ds,period));return <section className="page"><div className="pageTitle"><h2>Histórico</h2><p>Compilado por dia, semana e mês com a mesma visão operacional.</p></div><div className="opSwitch"><button className={modo==='dia'?'active':''} onClick={()=>setModo('dia')}>Dia</button><button className={modo==='semana'?'active':''} onClick={()=>setModo('semana')}>Semana</button><button className={modo==='mes'?'active':''} onClick={()=>setModo('mes')}>Mês</button></div><OperationalBoard items={items} title={`Histórico — ${modo}`}/></section>}
 function Admin(){if(!isAdmin())return <section className="page"><div className="card"><h2>Acesso restrito</h2><p>Esta área aparece somente para administradores.</p></div></section>;const[area,setArea]=useState<'usuarios'|'setores'|'maquinas'|'turnos'|'logs'|'config'>('usuarios');return <section className="page adminPage"><div className="pageTitle"><h2>Administração</h2><p>Painel de controle enterprise: usuários, setores, máquinas, turnos, logs e configurações.</p></div><div className="adminTabs"><button className={area==='usuarios'?'active':''} onClick={()=>setArea('usuarios')}><Users/> Usuários</button><button className={area==='setores'?'active':''} onClick={()=>setArea('setores')}><Factory/> Setores</button><button className={area==='maquinas'?'active':''} onClick={()=>setArea('maquinas')}><Settings2/> Máquinas</button><button className={area==='turnos'?'active':''} onClick={()=>setArea('turnos')}><Clock3/> Turnos</button><button className={area==='logs'?'active':''} onClick={()=>setArea('logs')}><Activity/> Logs</button><button className={area==='config'?'active':''} onClick={()=>setArea('config')}><SlidersHorizontal/> Config.</button></div>{area==='usuarios'&&<UsuariosAdmin/>}{area==='setores'&&<SetoresAdmin/>}{area==='maquinas'&&<MaquinasAdmin/>}{area==='turnos'&&<TurnosAdmin/>}{area==='logs'&&<LogsAdmin/>}{area==='config'&&<ConfigAdmin/>}</section>}
 function EmptyState({text}:{text:string}){return <div className="emptyState"><Database size={28}/><span>{text}</span></div>}

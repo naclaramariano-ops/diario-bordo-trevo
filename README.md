@@ -1,51 +1,31 @@
-# Diário de Bordo Trevo — V5 Enterprise Foundation
+# Diário de Bordo Trevo — V6.7 UX Prática
 
-Base V5 preservada, com reforço enterprise na camada offline/sincronização.
+Evolução direta da base V6.5.1 validada.
 
-## Atualização
+## Principal melhoria
 
-1. Substitua os arquivos no repositório GitHub.
-2. Faça Commit.
-3. Faça Push origin.
-4. Aguarde o Cloudflare publicar.
-5. No navegador, use Ctrl + F5 uma vez.
+A aba **Novo** foi redesenhada para reduzir burocracia no celular:
 
-## Supabase
+- uma máquina por vez;
+- todos os blocos essenciais na mesma tela;
+- campos condicionais somente quando necessários;
+- botões grandes Sim/Não;
+- lista de máquinas com progresso;
+- botão **Salvar e próxima**;
+- atalhos **Sem avisos** e **Sem observações**;
+- validação direcionando ao primeiro campo pendente;
+- SKU pesquisável por máquina;
+- CIP automático em 72 horas;
+- regra de parada contínua ≥ 4h;
+- mantém Hoje, Histórico, Admin, PWA, offline e sincronização.
 
-Não precisa rodar SQL novo se a V5.4 já foi aplicada.
+## Cloudflare Pages
 
-## Entregue nesta versão
-
-- Migração automática do IndexedDB.
-- Versionamento do banco offline.
-- Criação automática de novas object stores.
-- Sincronização resiliente com fila.
-- Registro de conflitos offline x online.
-- Atualização silenciosa via Service Worker.
-- Mantém o que já estava funcionando na V5.
-
-Veja detalhes em `docs/CHANGELOG_V5_ENTERPRISE_FOUNDATION.md`.
-
-
-## V6.5 — SKU por máquina
-A lista suspensa de SKU é específica por máquina, em ordem alfabética, com **Sem Programação** disponível para todas. Não requer migration no Supabase.
-
-
-## V6.5
-- UHT substituído por TBA 1 e TBA 2 no Envase 2.
-- Cada TBA possui passagem, CIP, histórico e classificação próprios.
-- Campos de SKU são pesquisáveis e mostram somente SKUs permitidos para a máquina.
-- `Sem Programação` aparece no topo de todas as listas.
-- Demais SKUs aparecem em ordem alfabética.
-
-## Versão 6.5.1 — build estabilizado
-
-Esta entrega usa dependências fixadas e foi validada com instalação limpa e build de produção.
-
-No Cloudflare Pages use:
-
+- Framework: React (Vite)
 - Build command: `npm run build`
-- Build output directory: `dist`
+- Output directory: `dist`
 - Root directory: vazio
 
-Não envie `node_modules`, `dist` ou um `package-lock.json` antigo ao GitHub.
+## Build verificado
+
+O pacote inclui `package-lock.json` gerado com Node 22.16.0 e npm 10.9.2, a mesma versão exibida no log do Cloudflare.
