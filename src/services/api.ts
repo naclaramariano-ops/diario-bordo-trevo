@@ -2,7 +2,7 @@ import { supabase, supabaseConfigured } from './supabase';
 import { currentUser } from './auth';
 import { sha256, uid } from '../utils/security';
 import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types';
-import { del, enqueueSync, getAll, put, registerConflict } from './localDb';
+import { del, enqueueSync, get, getAll, put, registerConflict } from './localDb';
 
 async function cacheList<T>(store:string, online:()=>Promise<T[]>){
   if(supabaseConfigured&&navigator.onLine){
@@ -97,10 +97,21 @@ export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {
 export async function saveDiario(input:Partial<Diario>){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const now=new Date().toISOString(); const existing=input.id;
-  const row:any={...input,id:input.id||uid(),criado_por:input.criado_por||me.id,criado_em:input.criado_em||now,atualizado_em:now};
+  let original:Diario|undefined;
+  if(existing){
+    if(supabaseConfigured&&navigator.onLine){
+      const {data,error}=await supabase.from('diarios').select('*').eq('id',existing).maybeSingle();
+      if(!error&&data) original=data as Diario;
+    }
+    original=original||await get<Diario>('diarios_cache',existing);
+    if(!original) throw new Error('Lançamento não encontrado para edição.');
+    const owner=original.criado_por===me.id||original.lider_id===me.id;
+    if(me.perfil!=='administrador'&&!owner) throw new Error('Você pode editar somente os seus próprios lançamentos.');
+  }
+  const row:any={...input,id:input.id||uid(),criado_por:original?.criado_por||input.criado_por||me.id,criado_em:original?.criado_em||input.criado_em||now,atualizado_em:now};
   if(existing){row.editado=true;row.ultima_edicao_por=me.nome;row.ultima_edicao_em=now}
   const saved=await upsertOnlineOrQueue('diarios',row,'diarios_cache');
-  await audit('diarios',row.id,existing?'editar':'cadastrar',{data:row.data,turno:row.turno,setor:row.setor_nome});
+  await audit('diarios',row.id,existing?'editar':'cadastrar',{data:row.data,turno:row.turno,setor:row.setor_nome,ultima_edicao_por:existing?me.nome:undefined,ultima_edicao_em:existing?now:undefined});
   return saved;
 }
 

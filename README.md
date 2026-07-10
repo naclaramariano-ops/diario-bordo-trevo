@@ -1,3 +1,7 @@
+# Diário de Bordo Trevo — V6.7.7
+
+Base enterprise modular com PWA, Supabase, funcionamento offline, quadro operacional, edição rastreável e identidade visual oficial.
+
 # Diário de Bordo Trevo — V6.7.6 UX Refinement
 
 Evolução direta da base funcional V6.7.4, mantendo Hoje, Novo, Histórico, Admin, PWA, Supabase, IndexedDB e sincronização.

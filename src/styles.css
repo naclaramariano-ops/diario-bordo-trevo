@@ -38,3 +38,19 @@ body.darkTheme .adminTabs button,body.darkTheme .emptyState,body.darkTheme .logR
   .bottomNav button{min-height:54px}.cipGrid{grid-template-columns:1fr}
 }
 @media(max-width:420px){.pageTitle{margin-bottom:12px}.pageTitle h2{font-size:26px}.pageTitle p{font-size:13px}.quickFormHeader h3{font-size:20px}.quickBadge{padding:6px 8px}.quickMeta{grid-template-columns:1fr!important}}
+
+/* V6.7.7 — identidade visual, edição rastreável e histórico simplificado */
+.logoImage{display:block;object-fit:contain;object-position:center;flex:0 0 auto}
+.loginLogo{width:112px;height:112px;margin:0 auto 16px;filter:drop-shadow(0 10px 22px #00000022)}
+.miniLogoImage{width:48px;height:48px;border-radius:15px}
+.drawerLogoImage{width:68px;height:68px}
+.fatalLogo{width:76px;height:76px}
+.logoButton{overflow:visible}
+.recordMeta span{display:block;margin-top:7px;color:#475569;font-size:12px;font-weight:800}
+.editLaunchAction{background:transparent!important;border:0!important;padding:2px 0 0!important}
+.editLaunchAction button{width:100%;min-height:42px;border-radius:14px}
+.editPageTitle{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.cancelEditButton{min-height:42px;white-space:nowrap}
+.historyPeriodSwitch{margin-bottom:14px}
+.darkTheme .recordMeta span{color:#cbd5e1}
+@media(max-width:760px){.loginLogo{width:94px;height:94px}.miniLogoImage{width:44px;height:44px}.drawerLogoImage{width:60px;height:60px}.editPageTitle{display:grid}.cancelEditButton{width:100%}}
