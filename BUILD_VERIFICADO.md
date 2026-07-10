@@ -1,19 +1,12 @@
 # Build verificado
 
-Versão: 6.5.1
+Validação realizada em 10/07/2026:
 
-Validações executadas antes da entrega:
+- Node.js: 22.16.0
+- npm: 10.9.2
+- `npm ci --ignore-scripts`: concluído
+- `npm run build`: concluído
+- Vite: 5.4.11
+- TypeScript: 5.6.3
 
-- instalação limpa de dependências sem package-lock.json;
-- verificação TypeScript com `tsc --noEmit`;
-- build de produção com `vite build`;
-- geração da pasta `dist` concluída com sucesso.
-
-Configuração do Cloudflare Pages:
-
-- Framework preset: React (Vite) ou Vite
-- Build command: `npm run build`
-- Build output directory: `dist`
-- Root directory: deixe vazio
-
-O ZIP não contém `node_modules`, `dist` ou `package-lock.json`.
+O `package-lock.json` foi recriado na mesma combinação de Node/npm apresentada pelo Cloudflare.
