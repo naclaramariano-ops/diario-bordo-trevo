@@ -7,17 +7,10 @@ import { clear, del, enqueueSync, get, getAll, put, registerConflict } from './l
 
 async function cacheList<T>(store:string, online:()=>Promise<T[]>){
   if(supabaseConfigured&&navigator.onLine){
-    try{
-      const data=await online();
-      // Atualiza o cache com a fonte oficial online.
-      for(const x of data as any[]) await put(store,x);
-      return data;
-    }catch(e){
-      console.error('Falha ao carregar dados do Supabase:',store,e);
-      const cached=await getAll<T>(store);
-      if(cached.length)return cached;
-      throw e;
-    }
+    const data=await online();
+    await clear(store);
+    for(const x of data as any[]) await put(store,x);
+    return data;
   }
   return getAll<T>(store)
 }
@@ -53,16 +46,30 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string){
   }else await enqueueSync({tabela,operacao:'delete',chave:id});
   await del(cacheStore,id);
 }
+async function upsertCorporate(tabela:string,row:any,cacheStore:string){
+  if(!supabaseConfigured||!navigator.onLine) throw new Error('É necessário estar online para alterar cadastros corporativos.');
+  row.atualizado_em=row.atualizado_em||new Date().toISOString();
+  const {error}=await supabase.from(tabela).upsert(row,{onConflict:'id'});
+  if(error) throw new Error(error.message);
+  await put(cacheStore,row);
+  return row;
+}
+async function deleteCorporate(tabela:string,id:string,cacheStore:string){
+  if(!supabaseConfigured||!navigator.onLine) throw new Error('É necessário estar online para alterar cadastros corporativos.');
+  const {error}=await supabase.from(tabela).delete().eq('id',id);
+  if(error) throw new Error(error.message);
+  await del(cacheStore,id);
+}
 
 export { listUsuarios, saveUsuario, deleteUsuario };
 
 export const listSetores=()=>cacheList<Setor>('setores_cache',async()=>{const {data,error}=await supabase.from('setores').select('*').order('nome');if(error)throw error;return data||[]});
-export async function saveSetor(input:Partial<Setor>){ensureAdmin(); const row={id:input.id||uid(),nome:input.nome,tipo:input.tipo||'',ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('setores',row,'setores_cache'); await audit('setores',row.id,input.id?'editar':'cadastrar',row); return saved}
-export async function deleteSetor(id:string){ensureAdmin(); await deleteOnlineOrQueue('setores',id,'setores_cache'); await audit('setores',id,'excluir',{}); return true}
+export async function saveSetor(input:Partial<Setor>){ensureAdmin(); const row={id:input.id||uid(),nome:input.nome,tipo:input.tipo||'',ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertCorporate('setores',row,'setores_cache'); await audit('setores',row.id,input.id?'editar':'cadastrar',row); return saved}
+export async function deleteSetor(id:string){ensureAdmin(); await deleteCorporate('setores',id,'setores_cache'); await audit('setores',id,'excluir',{}); return true}
 
 export const listMaquinas=()=>cacheList<Maquina>('maquinas_cache',async()=>{const {data,error}=await supabase.from('maquinas').select('*').order('ordem').order('nome');if(error)throw error;return data||[]});
-export async function saveMaquina(input:Partial<Maquina>){ensureAdmin(); const row={id:input.id||uid(),setor_id:input.setor_id,nome:input.nome,codigo:input.codigo||'',ordem:input.ordem||0,ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('maquinas',row,'maquinas_cache'); await audit('maquinas',row.id,input.id?'editar':'cadastrar',row); return saved}
-export async function deleteMaquina(id:string){ensureAdmin(); await deleteOnlineOrQueue('maquinas',id,'maquinas_cache'); await audit('maquinas',id,'excluir',{}); return true}
+export async function saveMaquina(input:Partial<Maquina>){ensureAdmin(); const row={id:input.id||uid(),setor_id:input.setor_id,nome:input.nome,codigo:input.codigo||'',ordem:input.ordem||0,ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertCorporate('maquinas',row,'maquinas_cache'); await audit('maquinas',row.id,input.id?'editar':'cadastrar',row); return saved}
+export async function deleteMaquina(id:string){ensureAdmin(); await deleteCorporate('maquinas',id,'maquinas_cache'); await audit('maquinas',id,'excluir',{}); return true}
 
 export const listTurnos=()=>cacheList<Turno>('turnos_cache',async()=>{const {data,error}=await supabase.from('turnos').select('*').order('nome');if(error)throw error;return data||[]});
 export async function saveTurno(input:Partial<Turno>){
@@ -74,11 +81,11 @@ export async function saveTurno(input:Partial<Turno>){
     if(data?.id) id=data.id;
   }
   const row={id:id||uid(),nome,inicio:input.inicio||'00:00',fim:input.fim||'00:00',ativo:input.ativo??true,atualizado_em:new Date().toISOString()};
-  const saved=await upsertOnlineOrQueue('turnos',row,'turnos_cache');
+  const saved=await upsertCorporate('turnos',row,'turnos_cache');
   await audit('turnos',row.id,input.id||id?'editar':'cadastrar',row);
   return saved;
 }
-export async function deleteTurno(id:string){ensureAdmin(); await deleteOnlineOrQueue('turnos',id,'turnos_cache'); await audit('turnos',id,'excluir',{}); return true}
+export async function deleteTurno(id:string){ensureAdmin(); await deleteCorporate('turnos',id,'turnos_cache'); await audit('turnos',id,'excluir',{}); return true}
 
 export const listAudit=()=>cacheList<AuditLog>('audit_cache',async()=>{const {data,error}=await supabase.from('audit_logs').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {data,error}=await supabase.from('diarios').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});

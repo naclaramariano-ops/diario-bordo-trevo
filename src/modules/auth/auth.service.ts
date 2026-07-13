@@ -1,37 +1,50 @@
 import type { Usuario } from '../../types';
-import { supabase, supabaseConfigured } from '../../infrastructure/supabase/client';
+import { supabase, assertSupabaseReady } from '../../infrastructure/supabase/client';
 import { sha256 } from '../../utils/security';
 import { put } from '../../services/localDb';
 
-const SESSION_KEY = 'dbt_session_v8';
+const SESSION_KEY = 'dbt_session_v9';
 
-type LoginResult = Usuario & { session_token?: string };
+type LoginResult = Usuario;
 
 function saveSession(user: LoginResult): void {
   localStorage.setItem(SESSION_KEY, JSON.stringify(user));
 }
 
 export async function login(usuario: string, senha: string): Promise<Usuario> {
-  if (!supabaseConfigured) throw new Error('Conexão corporativa indisponível.');
-  if (!navigator.onLine) throw new Error('É necessário estar online para entrar.');
+  await assertSupabaseReady();
 
-  const p_usuario = String(usuario || '').trim().toLowerCase();
-  const p_senha_hash = await sha256(String(senha || '').trim());
+  const normalizedUser = String(usuario || '').trim().toLowerCase();
+  const passwordHash = await sha256(String(senha || '').trim());
 
-  const { data, error } = await supabase.rpc('autenticar_usuario_app_v8', {
-    p_usuario,
-    p_senha_hash,
+  // Caminho preferencial: RPC sem expor senha_hash no retorno.
+  const rpc = await supabase.rpc('autenticar_usuario_app_v9', {
+    p_usuario: normalizedUser,
+    p_senha_hash: passwordHash,
   });
 
-  if (error) {
-    console.error('auth rpc failed', error);
-    throw new Error('Não foi possível validar o acesso no servidor.');
+  let data: Usuario | null = null;
+  if (!rpc.error) {
+    data = (Array.isArray(rpc.data) ? rpc.data[0] : rpc.data) as Usuario | null;
+  } else if (String(rpc.error.message || '').toLowerCase().includes('function')) {
+    // Compatibilidade durante a implantação inicial: a função pode ainda não ter sido executada.
+    const fallback = await supabase
+      .from('usuarios')
+      .select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em')
+      .eq('usuario', normalizedUser)
+      .eq('senha_hash', passwordHash)
+      .maybeSingle();
+    if (fallback.error) throw new Error(`Não foi possível validar o acesso: ${fallback.error.message}`);
+    data = fallback.data as Usuario | null;
+  } else {
+    console.error('Falha no login Supabase', rpc.error);
+    throw new Error(`Não foi possível validar o acesso: ${rpc.error.message}`);
   }
 
-  const result = (Array.isArray(data) ? data[0] : data) as LoginResult | null;
-  if (!result) throw new Error('Usuário ou senha inválidos.');
-  if (!result.ativo) throw new Error('Usuário inativo.');
+  if (!data) throw new Error('Usuário ou senha inválidos.');
+  if (!data.ativo) throw new Error('Usuário inativo.');
 
+  const result = data as Usuario;
   saveSession(result);
   await put('session', { ...result, id: 'current' });
   return result;
@@ -39,18 +52,30 @@ export async function login(usuario: string, senha: string): Promise<Usuario> {
 
 export function currentUser(): LoginResult | null {
   try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) return JSON.parse(raw) as LoginResult;
+
+    // Migração transparente de sessões antigas.
+    const legacy = localStorage.getItem('dbt_session_v8');
+    if (legacy) {
+      const parsed = JSON.parse(legacy) as LoginResult;
+      saveSession(parsed);
+      localStorage.removeItem('dbt_session_v8');
+      return parsed;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
 export function sessionToken(): string {
-  return currentUser()?.session_token || '';
+  return currentUser()?.id || '';
 }
 
 export function logout(): void {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('dbt_session_v8');
 }
 
 export function isAdmin(): boolean {

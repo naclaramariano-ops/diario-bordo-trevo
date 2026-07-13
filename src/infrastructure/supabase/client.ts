@@ -16,7 +16,7 @@ export const supabase: SupabaseClient = createClient(
       detectSessionInUrl: false,
     },
     global: {
-      headers: { 'x-client-info': 'diario-bordo-trevo-v8' },
+      headers: { 'x-client-info': 'diario-bordo-trevo-v9' },
     },
   },
 );
