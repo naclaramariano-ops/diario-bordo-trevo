@@ -42,7 +42,7 @@ export async function login(usuario:string, senha:string):Promise<Usuario>{
     return u;
   }
 
-  throw new Error('Supabase não configurado ou credenciais inválidas.');
+  throw new Error('Não foi possível conectar ao servidor. Verifique a internet e tente novamente.');
 }
 
 export function currentUser():Usuario|null{try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{return null}}
