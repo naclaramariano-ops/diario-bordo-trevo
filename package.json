@@ -1,7 +1,7 @@
 {
   "name": "diario-bordo-trevo",
   "private": true,
-  "version": "6.7.6",
+  "version": "6.7.10",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,6 +23,5 @@
   },
   "engines": {
     "node": ">=20 <23"
-  },
-  "packageManager": "pnpm@9.15.4"
+  }
 }

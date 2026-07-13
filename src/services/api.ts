@@ -2,13 +2,26 @@ import { supabase, supabaseConfigured } from './supabase';
 import { currentUser } from './auth';
 import { sha256, uid } from '../utils/security';
 import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types';
-import { del, enqueueSync, getAll, put, registerConflict } from './localDb';
+import { clear, del, enqueueSync, getAll, put, registerConflict } from './localDb';
 
-async function cacheList<T>(store:string, online:()=>Promise<T[]>){
+async function cacheList<T>(store:string, online:()=>Promise<T[]>, authoritative=false){
   if(supabaseConfigured&&navigator.onLine){
-    try{const data=await online();for(const x of data as any[]) await put(store,x);return data}catch(e){console.warn('cache fallback',store,e)}
+    try{
+      const data=await online();
+      await clear(store);
+      for(const x of data as any[]) await put(store,x);
+      return data;
+    }catch(e:any){
+      console.error('Falha ao carregar do Supabase',store,e);
+      if(authoritative) throw new Error(e?.message||`Não foi possível carregar ${store} do servidor.`);
+    }
   }
   return getAll<T>(store)
+}
+function requireOnlineAdmin(){
+  ensureAdmin();
+  if(!supabaseConfigured) throw new Error('Supabase não configurado.');
+  if(!navigator.onLine) throw new Error('É necessário estar online para alterar cadastros administrativos.');
 }
 async function audit(entidade:string, entidade_id:string, acao:string, detalhes:any={}){
   const me=currentUser();
@@ -19,12 +32,13 @@ async function audit(entidade:string, entidade_id:string, acao:string, detalhes:
 }
 function ensureAdmin(){const me=currentUser(); if(me?.perfil!=='administrador') throw new Error('Apenas administrador'); return me}
 function cleanUndefined(obj:any){Object.keys(obj).forEach(k=>{if(obj[k]===undefined||obj[k]===null||obj[k]==='') delete obj[k]}); return obj}
-async function upsertOnlineOrQueue(tabela:string,row:any,cacheStore:string){
+async function upsertOnlineOrQueue(tabela:string,row:any,cacheStore:string,strict=false){
   const now=new Date().toISOString();
   row.atualizado_em=row.atualizado_em||now;
   if(supabaseConfigured&&navigator.onLine){
     const {error}=await supabase.from(tabela).upsert(row,{onConflict:'id'});
     if(error){
+      if(strict) throw error;
       await enqueueSync({tabela,operacao:'upsert',payload:row});
       row.sync_status='pendente';
     }else row.sync_status='sincronizado';
@@ -35,20 +49,21 @@ async function upsertOnlineOrQueue(tabela:string,row:any,cacheStore:string){
   await put(cacheStore,row);
   return row;
 }
-async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string){
+async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string,strict=false){
   if(supabaseConfigured&&navigator.onLine){
     const {error}=await supabase.from(tabela).delete().eq('id',id);
-    if(error) await enqueueSync({tabela,operacao:'delete',chave:id});
+    if(error){if(strict)throw error;await enqueueSync({tabela,operacao:'delete',chave:id});}
   }else await enqueueSync({tabela,operacao:'delete',chave:id});
   await del(cacheStore,id);
 }
 
-export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('*').order('nome');if(error)throw error;return data||[]});
+export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
 const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
 export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const selfUpdate=input.id===me.id;
   if(me.perfil!=='administrador'&&!selfUpdate) throw new Error('Apenas administrador pode cadastrar usuários');
+  if(me.perfil==='administrador'&&!selfUpdate) requireOnlineAdmin();
   let row:any;
   if(me.perfil!=='administrador'&&selfUpdate){
     row={id:me.id};
@@ -62,23 +77,23 @@ export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
     else if(!row.senha_hash) delete row.senha_hash;
   }
   delete row.senha; cleanUndefined(row);
-  const saved=await upsertOnlineOrQueue('usuarios',row,'usuarios_cache');
+  const saved=await upsertOnlineOrQueue('usuarios',row,'usuarios_cache',me.perfil==='administrador');
   await audit('usuarios',row.id,input.id?'editar':'cadastrar',{usuario:row.usuario,nome:row.nome,perfil:row.perfil,ativo:row.ativo});
   return saved;
 }
-export async function deleteUsuario(id:string){ensureAdmin(); await deleteOnlineOrQueue('usuarios',id,'usuarios_cache'); await audit('usuarios',id,'excluir',{}); return true}
+export async function deleteUsuario(id:string){requireOnlineAdmin(); await deleteOnlineOrQueue('usuarios',id,'usuarios_cache',true); await audit('usuarios',id,'excluir',{}); return true}
 
-export const listSetores=()=>cacheList<Setor>('setores_cache',async()=>{const {data,error}=await supabase.from('setores').select('*').order('nome');if(error)throw error;return data||[]});
-export async function saveSetor(input:Partial<Setor>){ensureAdmin(); const row={id:input.id||uid(),nome:input.nome,tipo:input.tipo||'',ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('setores',row,'setores_cache'); await audit('setores',row.id,input.id?'editar':'cadastrar',row); return saved}
-export async function deleteSetor(id:string){ensureAdmin(); await deleteOnlineOrQueue('setores',id,'setores_cache'); await audit('setores',id,'excluir',{}); return true}
+export const listSetores=()=>cacheList<Setor>('setores_cache',async()=>{const {data,error}=await supabase.from('setores').select('*').order('nome');if(error)throw error;return data||[]},true);
+export async function saveSetor(input:Partial<Setor>){requireOnlineAdmin(); const row={id:input.id||uid(),nome:input.nome,tipo:input.tipo||'',ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('setores',row,'setores_cache',true); await audit('setores',row.id,input.id?'editar':'cadastrar',row); return saved}
+export async function deleteSetor(id:string){requireOnlineAdmin(); await deleteOnlineOrQueue('setores',id,'setores_cache',true); await audit('setores',id,'excluir',{}); return true}
 
-export const listMaquinas=()=>cacheList<Maquina>('maquinas_cache',async()=>{const {data,error}=await supabase.from('maquinas').select('*').order('ordem').order('nome');if(error)throw error;return data||[]});
-export async function saveMaquina(input:Partial<Maquina>){ensureAdmin(); const row={id:input.id||uid(),setor_id:input.setor_id,nome:input.nome,codigo:input.codigo||'',ordem:input.ordem||0,ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('maquinas',row,'maquinas_cache'); await audit('maquinas',row.id,input.id?'editar':'cadastrar',row); return saved}
-export async function deleteMaquina(id:string){ensureAdmin(); await deleteOnlineOrQueue('maquinas',id,'maquinas_cache'); await audit('maquinas',id,'excluir',{}); return true}
+export const listMaquinas=()=>cacheList<Maquina>('maquinas_cache',async()=>{const {data,error}=await supabase.from('maquinas').select('*').order('ordem').order('nome');if(error)throw error;return data||[]},true);
+export async function saveMaquina(input:Partial<Maquina>){requireOnlineAdmin(); const row={id:input.id||uid(),setor_id:input.setor_id,nome:input.nome,codigo:input.codigo||'',ordem:input.ordem||0,ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('maquinas',row,'maquinas_cache',true); await audit('maquinas',row.id,input.id?'editar':'cadastrar',row); return saved}
+export async function deleteMaquina(id:string){requireOnlineAdmin(); await deleteOnlineOrQueue('maquinas',id,'maquinas_cache',true); await audit('maquinas',id,'excluir',{}); return true}
 
-export const listTurnos=()=>cacheList<Turno>('turnos_cache',async()=>{const {data,error}=await supabase.from('turnos').select('*').order('nome');if(error)throw error;return data||[]});
+export const listTurnos=()=>cacheList<Turno>('turnos_cache',async()=>{const {data,error}=await supabase.from('turnos').select('*').order('nome');if(error)throw error;return data||[]},true);
 export async function saveTurno(input:Partial<Turno>){
-  ensureAdmin();
+  requireOnlineAdmin();
   const nome=(input.nome||'').trim();
   let id=input.id||'';
   if(!id&&supabaseConfigured&&navigator.onLine&&nome){
@@ -86,11 +101,11 @@ export async function saveTurno(input:Partial<Turno>){
     if(data?.id) id=data.id;
   }
   const row={id:id||uid(),nome,inicio:input.inicio||'00:00',fim:input.fim||'00:00',ativo:input.ativo??true,atualizado_em:new Date().toISOString()};
-  const saved=await upsertOnlineOrQueue('turnos',row,'turnos_cache');
+  const saved=await upsertOnlineOrQueue('turnos',row,'turnos_cache',true);
   await audit('turnos',row.id,input.id||id?'editar':'cadastrar',row);
   return saved;
 }
-export async function deleteTurno(id:string){ensureAdmin(); await deleteOnlineOrQueue('turnos',id,'turnos_cache'); await audit('turnos',id,'excluir',{}); return true}
+export async function deleteTurno(id:string){requireOnlineAdmin(); await deleteOnlineOrQueue('turnos',id,'turnos_cache',true); await audit('turnos',id,'excluir',{}); return true}
 
 export const listAudit=()=>cacheList<AuditLog>('audit_cache',async()=>{const {data,error}=await supabase.from('audit_logs').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {data,error}=await supabase.from('diarios').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
