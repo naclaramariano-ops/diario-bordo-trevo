@@ -1,41 +1,23 @@
-# Diário de Bordo Trevo — V9 Enterprise Foundation
+# Diário de Bordo Trevo — V6.7.6 UX Refinement
 
-Base React + Vite + TypeScript com Supabase como fonte oficial dos cadastros corporativos.
+Evolução direta da base funcional V6.7.4, mantendo Hoje, Novo, Histórico, Admin, PWA, Supabase, IndexedDB e sincronização.
 
-## Publicação no Cloudflare Pages
+## Melhorias desta versão
 
-- Framework preset: Nenhum
-- Build command: `npm run build`
+- Programado e Produzido formatados automaticamente com ponto de milhar.
+- Próximo CIP exibido em dia/mês/ano • horário.
+- Correção do bloco de Observações gerais da passagem.
+- Data e Turno sem sobreposição no celular.
+- Botões e campos mais compactos no mobile.
+- Seletor de SKU em tela própria, mantendo pesquisa e avanço automático.
+- Estrutura modular preservada.
+
+## Cloudflare Pages
+
+- Build command: `pnpm run build`
 - Build output directory: `dist`
 - Root directory: vazio
-- Production branch: `main`
 
-Variáveis obrigatórias:
+## Build verificado
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `NODE_VERSION=22.16.0`
-
-## Supabase
-
-Execute uma vez:
-
-`supabase/V9_ENTERPRISE_FOUNDATION_SETUP.sql`
-
-O script não apaga os usuários nem os registros existentes.
-
-## Regra de dados
-
-- Usuários, setores, máquinas e turnos: Supabase é a fonte oficial.
-- Cadastro administrativo exige internet e confirmação do servidor.
-- IndexedDB: cache de leitura offline e fila das passagens de turno.
-- Passagens podem ser registradas offline e sincronizadas quando a conexão voltar.
-
-## Verificação executada
-
-```bash
-npm ci --no-audit --no-fund
-npm run build
-```
-
-Build concluído com TypeScript e Vite sem erros.
+Executado localmente com TypeScript e Vite 5.4.11.

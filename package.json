@@ -1,13 +1,12 @@
 {
-  "name": "diario-bordo-trevo-v9-enterprise-foundation",
+  "name": "diario-bordo-trevo",
   "private": true,
-  "version": "9.0.0",
+  "version": "6.7.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.57.4",
@@ -23,7 +22,7 @@
     "vite": "5.4.11"
   },
   "engines": {
-    "node": "22.16.0",
-    "npm": "10.9.2"
-  }
+    "node": ">=20 <23"
+  },
+  "packageManager": "pnpm@9.15.4"
 }
