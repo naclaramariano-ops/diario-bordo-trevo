@@ -1,27 +1,24 @@
-# Diário de Bordo Trevo — V6.7.7
+# Diário de Bordo Trevo — V8.2 Enterprise
 
-Base enterprise modular com PWA, Supabase, funcionamento offline, quadro operacional, edição rastreável e identidade visual oficial.
+## Publicação no Cloudflare Pages
 
-# Diário de Bordo Trevo — V6.7.6 UX Refinement
-
-Evolução direta da base funcional V6.7.4, mantendo Hoje, Novo, Histórico, Admin, PWA, Supabase, IndexedDB e sincronização.
-
-## Melhorias desta versão
-
-- Programado e Produzido formatados automaticamente com ponto de milhar.
-- Próximo CIP exibido em dia/mês/ano • horário.
-- Correção do bloco de Observações gerais da passagem.
-- Data e Turno sem sobreposição no celular.
-- Botões e campos mais compactos no mobile.
-- Seletor de SKU em tela própria, mantendo pesquisa e avanço automático.
-- Estrutura modular preservada.
-
-## Cloudflare Pages
-
-- Build command: `pnpm run build`
+- Framework preset: **Nenhum** ou **Vite**
+- Build command: `npm run build`
 - Build output directory: `dist`
 - Root directory: vazio
 
-## Build verificado
+Variáveis já usadas pelo aplicativo:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-Executado localmente com TypeScript e Vite 5.4.11.
+## Supabase
+Execute uma única vez:
+
+`supabase/V8_2_ENTERPRISE_SETUP.sql`
+
+O SQL é idempotente e não apaga os usuários existentes.
+
+## Verificação executada
+- instalação limpa com `npm ci --offline --no-audit --no-fund`
+- `tsc --noEmit`
+- `vite build`
