@@ -2,7 +2,7 @@ import { supabase, supabaseConfigured } from './supabase';
 import { currentUser } from './auth';
 import { sha256, uid } from '../utils/security';
 import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types';
-import { del, enqueueSync, get, getAll, put, registerConflict } from './localDb';
+import { clear, del, enqueueSync, get, getAll, put, registerConflict } from './localDb';
 
 async function cacheList<T>(store:string, online:()=>Promise<T[]>){
   if(supabaseConfigured&&navigator.onLine){
@@ -53,7 +53,28 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string){
   await del(cacheStore,id);
 }
 
-export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]});
+export async function listUsuarios():Promise<Usuario[]> {
+  if (supabaseConfigured && navigator.onLine) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em')
+      .order('nome', { ascending: true });
+
+    if (error) {
+      console.error('Falha ao ler usuários no Supabase:', error);
+      throw new Error(`Falha ao carregar usuários do servidor: ${error.message}`);
+    }
+
+    const usuarios = (data || []) as Usuario[];
+    // A lista corporativa online é a fonte oficial. Limpa o cache antigo antes
+    // de gravar a fotografia atual para evitar diferenças entre aparelhos.
+    await clear('usuarios_cache');
+    for (const usuario of usuarios) await put('usuarios_cache', usuario);
+    return usuarios;
+  }
+
+  return getAll<Usuario>('usuarios_cache');
+}
 const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
 function requireAdminOnline(){
   ensureAdmin();

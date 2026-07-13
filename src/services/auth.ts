@@ -12,34 +12,23 @@ export async function login(usuario:string, senha:string):Promise<Usuario>{
   const senha_hash=await sha256((senha||'').trim());
 
   if(supabaseConfigured){
-    const {data,error}=await supabase
-      .from('usuarios')
-      .select('id,nome,usuario,senha_hash,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em')
-      .eq('usuario',loginUsuario)
-      .maybeSingle<UsuarioLogin>();
+    const {data,error}=await supabase.rpc('autenticar_usuario_app',{
+      p_usuario:loginUsuario,
+      p_senha_hash:senha_hash,
+    });
 
     if(error){
-      console.error('Erro ao consultar usuário:', error);
-      throw new Error('Falha ao consultar usuário no Supabase. Verifique RLS/policies da tabela usuarios.');
+      console.error('Erro ao autenticar no Supabase:',error);
+      throw new Error('Não foi possível validar o acesso no servidor.');
     }
 
-    if(!data) throw new Error('Usuário não encontrado.');
-    if(!data.ativo) throw new Error('Usuário inativo.');
-    if(data.senha_hash !== senha_hash){
-      console.warn('Hash digitado:', senha_hash, 'Hash banco:', data.senha_hash);
-      throw new Error('Senha inválida.');
-    }
+    const u=Array.isArray(data)?data[0]:data;
+    if(!u) throw new Error('Usuário ou senha inválidos.');
+    if(!u.ativo) throw new Error('Usuário inativo.');
 
-    const {senha_hash:_, ...u}=data;
     localStorage.setItem(SESSION_KEY,JSON.stringify(u));
     await put('session',{...u,id:'current'});
     return u as Usuario;
-  }
-
-  if(loginUsuario==='ana.peliteiro'&&senha==='admin123'){
-    const u={id:'local-admin',nome:'Ana Peliteiro',usuario:'ana.peliteiro',setor:'Operações',cargo:'Administradora Geral',perfil:'administrador',ativo:true,trocar_senha:false} as Usuario;
-    localStorage.setItem(SESSION_KEY,JSON.stringify(u));
-    return u;
   }
 
   throw new Error('Não foi possível conectar ao servidor. Verifique a internet e tente novamente.');
