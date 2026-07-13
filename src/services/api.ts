@@ -1,5 +1,6 @@
 import { supabase, supabaseConfigured } from './supabase';
 import { currentUser } from './auth';
+import { listUsuarios, saveUsuario, deleteUsuario } from '../modules/admin/users.service';
 import { sha256, uid } from '../utils/security';
 import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types';
 import { clear, del, enqueueSync, get, getAll, put, registerConflict } from './localDb';
@@ -53,70 +54,7 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string){
   await del(cacheStore,id);
 }
 
-export async function listUsuarios():Promise<Usuario[]> {
-  if (supabaseConfigured && navigator.onLine) {
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em')
-      .order('nome', { ascending: true });
-
-    if (error) {
-      console.error('Falha ao ler usuários no Supabase:', error);
-      throw new Error(`Falha ao carregar usuários do servidor: ${error.message}`);
-    }
-
-    const usuarios = (data || []) as Usuario[];
-    // A lista corporativa online é a fonte oficial. Limpa o cache antigo antes
-    // de gravar a fotografia atual para evitar diferenças entre aparelhos.
-    await clear('usuarios_cache');
-    for (const usuario of usuarios) await put('usuarios_cache', usuario);
-    return usuarios;
-  }
-
-  return getAll<Usuario>('usuarios_cache');
-}
-const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
-function requireAdminOnline(){
-  ensureAdmin();
-  if(!navigator.onLine) throw new Error('É necessário estar online para cadastrar ou alterar usuários.');
-  if(!supabaseConfigured) throw new Error('Conexão com o servidor não foi carregada. Atualize o aplicativo e tente novamente.');
-}
-export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
-  const me=currentUser(); if(!me) throw new Error('Sessão expirada');
-  const selfUpdate=input.id===me.id;
-  if(me.perfil!=='administrador'&&!selfUpdate) throw new Error('Apenas administrador pode cadastrar usuários');
-
-  let row:any;
-  if(me.perfil!=='administrador'&&selfUpdate){
-    if(!navigator.onLine||!supabaseConfigured) throw new Error('É necessário estar online para alterar a senha.');
-    row={id:me.id};
-    if(input.senha) row.senha_hash=await sha256(input.senha);
-    if(input.trocar_senha!==undefined) row.trocar_senha=input.trocar_senha;
-  } else {
-    requireAdminOnline();
-    const isNew=!input.id;
-    row={...input,usuario:input.usuario?.toLowerCase().trim(),ativo:input.ativo??true,atualizado_em:new Date().toISOString()};
-    if(input.senha) row.senha_hash=await sha256(input.senha);
-    if(isNew){row.id=uid();row.senha_hash=row.senha_hash||DEFAULT_USER_PASSWORD_HASH;row.trocar_senha=true;}
-    else if(!row.senha_hash) delete row.senha_hash;
-  }
-  delete row.senha; cleanUndefined(row);
-
-  // Cadastros administrativos são corporativos: só confirma sucesso após o Supabase confirmar.
-  const {data,error}=await supabase.from('usuarios').upsert(row,{onConflict:'id'}).select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em').single();
-  if(error) throw new Error(error.message);
-  await put('usuarios_cache',data);
-  await audit('usuarios',row.id,input.id?'editar':'cadastrar',{usuario:row.usuario,nome:row.nome,perfil:row.perfil,ativo:row.ativo});
-  return data as Usuario;
-}
-export async function deleteUsuario(id:string){
-  requireAdminOnline();
-  const {error}=await supabase.from('usuarios').delete().eq('id',id);
-  if(error)throw new Error(error.message);
-  await del('usuarios_cache',id);
-  await audit('usuarios',id,'excluir',{});
-  return true;
-}
+export { listUsuarios, saveUsuario, deleteUsuario };
 
 export const listSetores=()=>cacheList<Setor>('setores_cache',async()=>{const {data,error}=await supabase.from('setores').select('*').order('nome');if(error)throw error;return data||[]});
 export async function saveSetor(input:Partial<Setor>){ensureAdmin(); const row={id:input.id||uid(),nome:input.nome,tipo:input.tipo||'',ativo:input.ativo??true,atualizado_em:new Date().toISOString()}; const saved=await upsertOnlineOrQueue('setores',row,'setores_cache'); await audit('setores',row.id,input.id?'editar':'cadastrar',row); return saved}
