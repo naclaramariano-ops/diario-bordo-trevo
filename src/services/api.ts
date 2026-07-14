@@ -60,24 +60,41 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string,str
 export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
 const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
 export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
-  const me=currentUser(); if(!me) throw new Error('Sessão expirada');
+  const me=currentUser();
+  if(!me) throw new Error('Sessão expirada');
   const selfUpdate=input.id===me.id;
   if(me.perfil!=='administrador'&&!selfUpdate) throw new Error('Apenas administrador pode cadastrar usuários');
-  if(me.perfil==='administrador'&&!selfUpdate) requireOnlineAdmin();
-  let row:any;
-  if(me.perfil!=='administrador'&&selfUpdate){
-    row={id:me.id};
-    if(input.senha) row.senha_hash=await sha256(input.senha);
-    if(input.trocar_senha!==undefined) row.trocar_senha=input.trocar_senha;
-  } else {
-    const isNew=!input.id;
-    row={...input,usuario:input.usuario?.toLowerCase().trim(),ativo:input.ativo??true,atualizado_em:new Date().toISOString()};
-    if(input.senha) row.senha_hash=await sha256(input.senha);
-    if(isNew){row.id=uid();row.senha_hash=row.senha_hash||DEFAULT_USER_PASSWORD_HASH;row.trocar_senha=true;}
-    else if(!row.senha_hash) delete row.senha_hash;
+
+  // Atualizações do próprio perfil nunca usam upsert incompleto. Isso evita que o
+  // PostgreSQL tente criar uma nova linha sem os campos obrigatórios do usuário.
+  if(selfUpdate){
+    if(!supabaseConfigured||!navigator.onLine) throw new Error('Conecte-se à internet para atualizar o perfil.');
+    const patch:any={atualizado_em:new Date().toISOString()};
+    if(input.foto_url!==undefined) patch.foto_url=input.foto_url;
+    if(input.senha) patch.senha_hash=await sha256(input.senha);
+    if(input.trocar_senha!==undefined) patch.trocar_senha=input.trocar_senha;
+    const {data,error}=await supabase
+      .from('usuarios')
+      .update(patch)
+      .eq('id',me.id)
+      .select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em')
+      .single();
+    if(error) throw error;
+    const saved={...me,...data} as Usuario;
+    await put('usuarios_cache',saved);
+    await audit('usuarios',me.id,'editar_perfil',{foto_alterada:input.foto_url!==undefined,senha_alterada:!!input.senha});
+    return saved;
   }
-  delete row.senha; cleanUndefined(row);
-  const saved=await upsertOnlineOrQueue('usuarios',row,'usuarios_cache',me.perfil==='administrador');
+
+  requireOnlineAdmin();
+  const isNew=!input.id;
+  const row:any={...input,usuario:input.usuario?.toLowerCase().trim(),ativo:input.ativo??true,atualizado_em:new Date().toISOString()};
+  if(input.senha) row.senha_hash=await sha256(input.senha);
+  if(isNew){row.id=uid();row.senha_hash=row.senha_hash||DEFAULT_USER_PASSWORD_HASH;row.trocar_senha=true;}
+  else if(!row.senha_hash) delete row.senha_hash;
+  delete row.senha;
+  cleanUndefined(row);
+  const saved=await upsertOnlineOrQueue('usuarios',row,'usuarios_cache',true);
   await audit('usuarios',row.id,input.id?'editar':'cadastrar',{usuario:row.usuario,nome:row.nome,perfil:row.perfil,ativo:row.ativo});
   return saved;
 }

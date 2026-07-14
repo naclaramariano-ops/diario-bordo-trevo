@@ -1,0 +1,108 @@
+/* V7 Enterprise UI Foundation — Design System Trevo Ehrmann */
+:root {
+  --brand-navy-950: #101e32;
+  --brand-navy-800: #1f3b61;
+  --brand-blue-700: #304f80;
+  --brand-blue-500: #6785ae;
+  --brand-blue-200: #a6badd;
+  --brand-green-900: #1d6158;
+  --brand-green-700: #347a58;
+  --brand-green-500: #4c8e60;
+  --brand-green-300: #73af79;
+  --brand-mustard: #c59a3b;
+  --brand-red: #b64a45;
+  --brand-bg: #f4f7f8;
+  --brand-surface: #ffffff;
+  --brand-line: #d9e2e7;
+  --brand-ink: #182936;
+  --brand-muted: #667784;
+
+  --navy: var(--brand-navy-800);
+  --teal: var(--brand-green-700);
+  --brand-blue: var(--brand-blue-700);
+  --brand-blue-soft: #e9eef6;
+  --brand-green: var(--brand-green-700);
+  --brand-green-soft: #e8f3eb;
+  --line: var(--brand-line);
+  --muted: var(--brand-muted);
+  --bg: var(--brand-bg);
+  --card: var(--brand-surface);
+  --ink: var(--brand-ink);
+  --surface: var(--brand-surface);
+  --soft: #f7f9fa;
+  --green: var(--brand-green-700);
+  --danger: var(--brand-red);
+  --shadow: 0 16px 38px rgba(31,59,97,.09);
+  --shadow-sm: 0 7px 20px rgba(31,59,97,.065);
+}
+
+body { background: var(--brand-bg); color: var(--brand-ink); }
+.primary {
+  background: var(--brand-navy-800) !important;
+  border-color: var(--brand-navy-800) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 17px rgba(31,59,97,.16) !important;
+}
+.primary:hover { background: var(--brand-navy-950) !important; }
+.secondary { background:#fff; color:var(--brand-navy-800); border-color:var(--brand-line); }
+.secondary:hover { background:#f3f6f8; border-color:var(--brand-blue-500); }
+input:focus, select:focus, textarea:focus, .skuTrigger:focus {
+  border-color: var(--brand-blue-700) !important;
+  box-shadow: 0 0 0 3px rgba(48,79,128,.12) !important;
+}
+.login {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255,255,255,.16), transparent 34%),
+    linear-gradient(145deg, var(--brand-navy-950), var(--brand-navy-800)) !important;
+}
+.topbar { border-color:var(--brand-line); box-shadow:0 4px 18px rgba(31,59,97,.05); }
+.bottomNav button.active,
+.machineScroller button.active,
+.choiceButtons button.selected {
+  background: var(--brand-navy-800) !important;
+  border-color: var(--brand-navy-800) !important;
+  color:#fff !important;
+}
+.bottomNav button:not(.active) { color:#6b7c8b; }
+.areaCards div { background: var(--brand-navy-800) !important; }
+.progressTrack i { background: var(--brand-green-700) !important; }
+.quickFill { background:#e8f3eb; color:var(--brand-green-900); }
+.avatarFallback, .avatar { background:var(--brand-green-700) !important; }
+.userAvatarButton { border-color:#d7e2ea; }
+.drawerUserAvatar { border-color:#e3e9ef; }
+.photoAction { background:#edf3f6; color:var(--brand-navy-800); border-color:var(--brand-line); }
+
+/* Estados operacionais — cores semânticas reservadas */
+.ok,.badgeOk,.quickBadge.done,.opPill.conforme { background:#e8f3eb !important; color:#236143 !important; }
+.opPill.atencao,.draftStatus,.quickBadge { background:#fff3d8 !important; color:#805b08 !important; }
+.opPill.desvio,.bad { background:#f9e7e5 !important; color:#9d3434 !important; }
+.cipNotice { background:#e8f3eb; color:#236143; border-color:#c6dfce; }
+.cipNotice.expired { background:#f9e7e5; color:#9d3434; border-color:#e8c3c0; }
+.dangerSoft,.dangerLine { color:#a53737 !important; }
+
+/* Superfícies corporativas */
+.card,.quickTopCard,.quickFormCard,.stat,.userRow,.profileDrawer,.checkoutModal {
+  border-color:var(--brand-line) !important;
+  box-shadow:var(--shadow-sm);
+}
+.card,.quickTopCard,.quickFormCard,.stat,.userRow { background:#fff; }
+.editBanner,.myDraftsPanel { background:#edf2f7 !important; border-color:#d7e1eb !important; }
+.myDraftCard:hover,.myDraftCard:focus { border-color:var(--brand-blue-500); background:#f5f7fb; }
+
+.darkTheme {
+  --bg:#101722;
+  --card:#172230;
+  --surface:#172230;
+  --soft:#1c2938;
+  --line:#2b3a4a;
+  --ink:#edf3f7;
+  --muted:#a8b7c4;
+}
+.darkTheme .primary { background:var(--brand-blue-500) !important; border-color:var(--brand-blue-500) !important; }
+.darkTheme .secondary { background:#172230; color:#e7eef5; border-color:#34475a; }
+.darkTheme .quickActions { background:#172230; }
+
+@media(max-width:600px){
+  .primary,.secondary,.drawerAction { min-height:42px; }
+  .bottomNav button.active { box-shadow:none !important; }
+}
