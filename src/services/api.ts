@@ -114,7 +114,9 @@ export async function saveDiarioDraft(input:Partial<Diario>){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const now=new Date().toISOString();
   const row:any={...input,id:input.id||uid(),status:'Em preenchimento',criado_por:input.criado_por||me.id,lider_id:input.lider_id||me.id,lider_nome:input.lider_nome||me.nome,criado_em:input.criado_em||now,atualizado_em:now,editado:false};
-  return upsertOnlineOrQueue('diarios',row,'diarios_cache');
+  // Quando online, a posse da combinação Data + Turno + Área precisa ser confirmada pelo servidor.
+  // Assim evitamos dois responsáveis preenchendo a mesma passagem ao mesmo tempo.
+  return upsertOnlineOrQueue('diarios',row,'diarios_cache',supabaseConfigured&&navigator.onLine);
 }
 export async function assumeDiarioDraft(input:Diario){
   const me=ensureAdmin();
