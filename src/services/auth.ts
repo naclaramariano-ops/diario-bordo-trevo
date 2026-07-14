@@ -13,7 +13,7 @@ export async function login(usuario:string, senha:string):Promise<Usuario>{
 
   const db=requireSupabase();
   const {data,error}=await db.from('usuarios')
-    .select('id,nome,usuario,senha_hash,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em')
+    .select('id,nome,usuario,senha_hash,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em')
     .ilike('usuario',loginUsuario)
     .maybeSingle<UsuarioLogin>();
   if(error) throw new Error('Não foi possível consultar o usuário no servidor.');
@@ -26,5 +26,6 @@ export async function login(usuario:string, senha:string):Promise<Usuario>{
 }
 
 export function currentUser():Usuario|null{try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{return null}}
+export function updateCurrentUser(patch:Partial<Usuario>):Usuario|null{const atual=currentUser();if(!atual)return null;const novo={...atual,...patch};localStorage.setItem(SESSION_KEY,JSON.stringify(novo));return novo}
 export function logout(){localStorage.removeItem(SESSION_KEY)}
 export function isAdmin(){return currentUser()?.perfil==='administrador'}

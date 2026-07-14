@@ -57,7 +57,7 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string,str
   await del(cacheStore,id);
 }
 
-export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
+export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
 const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
 export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
