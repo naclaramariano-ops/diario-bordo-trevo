@@ -127,6 +127,32 @@ export async function assumeDiarioDraft(input:Diario){
   return saved;
 }
 
+
+export async function deleteDiarioDraft(input:Diario){
+  const me=currentUser(); if(!me) throw new Error('Sessão expirada');
+  const inProgress=['rascunho','em preenchimento'].includes(String(input.status||'').toLowerCase());
+  if(!inProgress) throw new Error('Somente passagens em andamento podem ser canceladas.');
+  if(input.criado_por!==me.id&&me.perfil!=='administrador') throw new Error('Você só pode cancelar seus próprios rascunhos.');
+  await deleteOnlineOrQueue('diarios',input.id,'diarios_cache',supabaseConfigured&&navigator.onLine);
+  await audit('diarios',input.id,'cancelar_rascunho',{data:input.data,turno:input.turno,setor:input.setor_nome,responsavel:input.lider_nome});
+  return true;
+}
+
+export async function cleanupDraftsAfterPublication(params:{keepId:string;data:string;turno:string;setor_nome?:string;criado_por:string}){
+  const drafts=await getAll<Diario>('diarios_cache');
+  const stale=drafts.filter(d=>d.id!==params.keepId&&d.data===params.data&&d.turno===params.turno&&(d.setor_nome||'')===(params.setor_nome||'')&&d.criado_por===params.criado_por&&['rascunho','em preenchimento'].includes(String(d.status||'').toLowerCase()));
+  for(const d of stale){
+    try{
+      if(supabaseConfigured&&navigator.onLine){
+        const {error}=await supabase.from('diarios').delete().eq('id',d.id);
+        if(error) throw error;
+      }else await enqueueSync({tabela:'diarios',operacao:'delete',chave:d.id});
+      await del('diarios_cache',d.id);
+    }catch(e){console.warn('Não foi possível remover rascunho duplicado',d.id,e)}
+  }
+  return stale.length;
+}
+
 export async function saveDiario(input:Partial<Diario>){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const now=new Date().toISOString(); const existing=input.id;
