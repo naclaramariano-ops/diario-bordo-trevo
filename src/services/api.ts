@@ -109,6 +109,22 @@ export async function deleteTurno(id:string){requireOnlineAdmin(); await deleteO
 
 export const listAudit=()=>cacheList<AuditLog>('audit_cache',async()=>{const {data,error}=await supabase.from('audit_logs').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {data,error}=await supabase.from('diarios').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
+
+export async function saveDiarioDraft(input:Partial<Diario>){
+  const me=currentUser(); if(!me) throw new Error('Sessão expirada');
+  const now=new Date().toISOString();
+  const row:any={...input,id:input.id||uid(),status:'Em preenchimento',criado_por:input.criado_por||me.id,lider_id:input.lider_id||me.id,lider_nome:input.lider_nome||me.nome,criado_em:input.criado_em||now,atualizado_em:now,editado:false};
+  return upsertOnlineOrQueue('diarios',row,'diarios_cache');
+}
+export async function assumeDiarioDraft(input:Diario){
+  const me=ensureAdmin();
+  const now=new Date().toISOString();
+  const row:any={...input,criado_por:me.id,lider_id:me.id,lider_nome:me.nome,atualizado_em:now,ultima_edicao_por:me.nome,ultima_edicao_em:now};
+  const saved=await upsertOnlineOrQueue('diarios',row,'diarios_cache',true);
+  await audit('diarios',row.id,'assumir_rascunho',{responsavel_anterior:input.lider_nome,responsavel_novo:me.nome});
+  return saved;
+}
+
 export async function saveDiario(input:Partial<Diario>){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const now=new Date().toISOString(); const existing=input.id;
