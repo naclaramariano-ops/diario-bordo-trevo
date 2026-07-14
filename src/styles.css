@@ -61,3 +61,21 @@ body.darkTheme .adminTabs button,body.darkTheme .emptyState,body.darkTheme .logR
   .novoQuickPage{width:100%;max-width:100%;padding-left:0;padding-right:0}.novoQuickPage .pageTitle{padding:0 2px}.quickTopCard{padding:11px;border-radius:18px}.quickMeta{grid-template-columns:1fr!important}.quickArea{grid-template-columns:1fr 1fr}.quickArea button{font-size:14px}.machineScroller{padding-top:9px}.quickFormCard{padding:12px;border-radius:20px}.quickFormHeader{padding-bottom:10px}.quickSection{padding:12px 0;gap:9px}.quickSection h4{font-size:15px}.choiceButtons{gap:7px}.choiceButtons button{min-height:40px!important}.quickActions{position:sticky;bottom:calc(64px + env(safe-area-inset-bottom));padding:9px 0 2px;grid-template-columns:.85fr 1.35fr}.generalObs{margin-top:10px;padding:12px}.finishPassage{margin-top:8px}.checkoutModal{max-height:88dvh}.checkoutSummary{margin:14px 0}.checkoutMeta{grid-template-columns:1fr 1fr}.myDraftCard{align-items:stretch;flex-direction:column}.myDraftActions{justify-content:stretch}.myDraftActions button{flex:1}.inProgressToggle{padding:13px 14px}.inProgressBody{padding:0 12px 12px}
 }
 @media(max-width:380px){.checkoutMeta{grid-template-columns:1fr}.quickActions{grid-template-columns:1fr 1.25fr}.quickActions button{font-size:14px}}
+
+/* V6.8.4 — estabilidade mobile do formulário e ações sem sobreposição */
+.quickFormCard,.quickSection,.quickTwoCols,.cipGrid,.cipGrid label{min-width:0;max-width:100%;box-sizing:border-box}
+.quickSection input,.quickSection select,.quickSection textarea,.cipGrid input[type="datetime-local"]{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.cipGrid input[type="datetime-local"]{-webkit-appearance:none;appearance:none;overflow:hidden;text-overflow:ellipsis}
+.quickActions{isolation:isolate}
+@media(max-width:600px){
+  .novoQuickPage{overflow-x:hidden}
+  .quickFormCard{overflow:visible!important;width:100%;max-width:100%;box-sizing:border-box}
+  .quickSection{overflow:visible}
+  .cipGrid{width:100%;grid-template-columns:minmax(0,1fr)!important}
+  .cipGrid label{width:100%;overflow:visible}
+  .cipGrid input[type="datetime-local"]{font-size:16px;padding-left:12px;padding-right:8px}
+  .quickActions{position:static!important;bottom:auto!important;z-index:auto;margin-top:4px;padding:10px 0 0;background:#fff;backdrop-filter:none}
+  .darkTheme .quickActions{background:#111827}
+  .generalObs{position:relative;z-index:1;margin-bottom:8px}
+  .finishPassage{position:relative;z-index:1;margin-bottom:calc(86px + env(safe-area-inset-bottom))}
+}
