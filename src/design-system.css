@@ -837,3 +837,95 @@ body.darkTheme .skuModalSearch input{background:transparent!important;color:#f3f
   .loginSecureNote{display:none}
   .loginMobileOrb{top:72px;transform:translateX(-50%) scale(.82)}
 }
+
+/* =========================================================
+   V7.2.4 — Login mobile clean / centralizado
+   ========================================================= */
+@media(max-width:760px){
+  .login{
+    background:
+      radial-gradient(circle at 50% -10%,rgba(42,94,140,.20),transparent 34%),
+      linear-gradient(180deg,#061729 0%,#0b2f52 62%,#0e385e 100%)!important;
+  }
+  .loginShell::before{display:none!important}
+  .loginFormSide{
+    justify-content:center;
+    padding:max(24px,env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .loginWelcome{
+    text-align:center;
+    margin:0 0 18px;
+  }
+  .loginMobileBrand{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin:0 0 28px;
+    text-align:center;
+  }
+  .loginMobileLogo{
+    width:68px;
+    height:68px;
+  }
+  .loginMobileBrand b{
+    font-size:21px;
+    line-height:1.08;
+  }
+  .loginMobileBrand span{
+    font-size:13px;
+    margin-top:5px;
+  }
+  .loginWelcome h2{
+    font-size:clamp(30px,8.5vw,38px);
+    line-height:1.02;
+    margin:0 0 8px;
+    letter-spacing:-.035em;
+  }
+  .loginWelcome>p{
+    max-width:none;
+    margin:0 auto;
+    font-size:15px;
+  }
+  .loginCard{
+    padding:20px;
+    gap:14px;
+  }
+  .loginCard::before{
+    left:26px;
+    right:26px;
+  }
+  .loginSecureNote{
+    display:block;
+    margin-top:3px;
+    color:#6b7d8f;
+    font-size:10px;
+    line-height:1.35;
+    text-align:center;
+  }
+}
+
+@media(max-width:390px){
+  .loginFormSide{
+    justify-content:center;
+    padding-top:max(18px,env(safe-area-inset-top));
+  }
+  .loginMobileBrand{margin-bottom:22px}
+  .loginMobileLogo{width:60px;height:60px}
+  .loginMobileBrand b{font-size:19px}
+  .loginWelcome h2{font-size:31px}
+  .loginCard{padding:17px}
+}
+
+@media(max-height:730px) and (max-width:760px){
+  .loginFormSide{
+    justify-content:flex-start;
+    overflow-y:auto;
+  }
+  .loginMobileBrand{margin-bottom:14px}
+  .loginMobileLogo{width:52px;height:52px}
+  .loginWelcome h2{font-size:29px}
+  .loginWelcome>p{font-size:13px}
+  .loginSecureNote{display:block}
+}
