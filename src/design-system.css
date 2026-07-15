@@ -741,3 +741,99 @@ body.darkTheme .loginWelcome>p{color:#9fb0c1}
 body.darkTheme .loginCard input{background:#122538!important;color:#f3f7fb!important;border-color:#2a4054!important}
 body.darkTheme .skuModalSearch{background:#0d1b2a!important;border-color:#4d83b1!important}
 body.darkTheme .skuModalSearch input{background:transparent!important;color:#f3f7fb!important}
+
+/* =========================================================
+   V7.2.3 — Login mobile premium / Command Center
+   ========================================================= */
+.loginCardHeader,.loginMobileEyebrow,.loginMobileFeatures,.loginSecureNote,.loginMobileOrb{display:none}
+
+@media(max-width:760px){
+  .login{
+    min-height:100dvh;
+    display:block;
+    padding:0;
+    overflow:hidden;
+    background:
+      radial-gradient(circle at 16% 8%,rgba(78,139,194,.28),transparent 26%),
+      radial-gradient(circle at 88% 32%,rgba(60,132,100,.18),transparent 28%),
+      linear-gradient(180deg,#061729 0%,#0b2f52 58%,#0e385e 100%)!important;
+  }
+  .loginShell{min-height:100dvh;position:relative;display:block;overflow:hidden}
+  .loginShell::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.38;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:34px 34px;
+    mask-image:linear-gradient(to bottom,#000,transparent 65%);
+  }
+  .loginHero{display:none}
+  .loginFormSide{
+    position:relative;z-index:1;min-height:100dvh;padding:max(24px,env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;justify-content:center;background:transparent!important;color:#fff;
+  }
+  .loginFormSide::before{display:none!important}
+  .loginMobileOrb{
+    display:block;position:absolute;top:clamp(96px,14vh,150px);left:50%;width:260px;height:260px;
+    transform:translateX(-50%);border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(44,102,151,.22),rgba(44,102,151,.06) 46%,transparent 68%);
+    filter:drop-shadow(0 22px 38px rgba(0,0,0,.22));
+  }
+  .loginMobileOrb::before,.loginMobileOrb::after,.loginMobileOrb span{
+    content:"";position:absolute;inset:34px;border:1px solid rgba(125,183,211,.18);border-radius:50%;
+  }
+  .loginMobileOrb::after{inset:64px;border-color:rgba(86,164,94,.18)}
+  .loginMobileOrb span:nth-child(1){inset:14px;transform:rotate(25deg);border-radius:42% 58% 48% 52%}
+  .loginMobileOrb span:nth-child(2){inset:84px;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 68%);border:0}
+  .loginMobileOrb span:nth-child(3){inset:118px;background:#d5a74f;box-shadow:0 0 0 7px rgba(213,167,79,.12);border:0}
+
+  .loginWelcome{position:relative;z-index:2;padding:0;text-align:left;margin:0 0 18px;color:#fff}
+  .loginMobileBrand{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin:0 0 clamp(34px,6vh,56px)}
+  .loginMobileLogo{width:56px;height:56px;filter:drop-shadow(0 12px 24px rgba(0,0,0,.28))}
+  .loginMobileBrand b{font-size:19px;letter-spacing:-.02em}
+  .loginMobileBrand span{font-size:12px;color:rgba(255,255,255,.66)}
+  .loginAccentLine{display:none}
+  .loginMobileEyebrow{display:block;color:#f1d58b;font-size:11px;font-weight:950;letter-spacing:.16em;margin-bottom:10px}
+  .loginWelcome h2{font-size:clamp(38px,11vw,52px);line-height:.98;letter-spacing:-.045em;margin:0 0 10px;color:#fff!important;text-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .loginWelcome>p{font-size:15px;line-height:1.45;color:rgba(255,255,255,.72)!important;margin:0;max-width:330px}
+  .loginMobileFeatures{display:flex;gap:7px;flex-wrap:wrap;margin-top:16px}
+  .loginMobileFeatures span{padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.075);font-size:10px;font-weight:850;color:rgba(255,255,255,.84);backdrop-filter:blur(8px)}
+
+  .loginCard{
+    position:relative;z-index:2;margin-top:0;padding:20px;border-radius:26px;
+    background:linear-gradient(180deg,rgba(255,255,255,.985),rgba(247,250,252,.97));
+    border:1px solid rgba(255,255,255,.72);box-shadow:0 30px 65px rgba(1,15,28,.34),inset 0 1px 0 #fff;
+    display:grid;gap:14px;color:#10263d;backdrop-filter:blur(18px)
+  }
+  .loginCard::before{content:"";position:absolute;top:0;left:28px;right:28px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#1f5684 0 48%,#d5a74f 48% 72%,#3f8a69 72%)}
+  .loginCardHeader{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:950;color:#1b3d5b;margin-bottom:2px}
+  .loginCard label{gap:7px;font-size:12px;letter-spacing:.01em;color:#42566b}
+  .loginCard input{min-height:52px!important;border-radius:16px!important;padding:13px 15px!important;background:#f8fafc!important;border-color:#d3deea!important;font-size:16px!important}
+  .loginCard input:focus{background:#fff!important;border-color:#1f5684!important;box-shadow:0 0 0 4px rgba(31,86,132,.12)!important}
+  .loginSubmit{min-height:54px!important;margin-top:3px;border-radius:16px!important;background:linear-gradient(180deg,#214f7b,#163c62)!important;box-shadow:0 14px 28px rgba(18,59,96,.26)!important;font-size:15px}
+  .loginSecureNote{display:flex;align-items:center;justify-content:center;gap:7px;color:#6b7d8f;font-size:10px;line-height:1.3;text-align:center;margin-top:1px}
+  .loginCard .err{font-size:12px;padding:10px 12px}
+}
+
+@media(max-width:390px){
+  .loginFormSide{padding-left:13px;padding-right:13px;justify-content:flex-start;padding-top:max(18px,env(safe-area-inset-top))}
+  .loginMobileBrand{margin-bottom:30px}
+  .loginWelcome h2{font-size:38px}
+  .loginMobileFeatures{margin-top:12px}
+  .loginCard{padding:17px;border-radius:23px;gap:12px}
+  .loginCard input{min-height:49px!important}
+  .loginSubmit{min-height:50px!important}
+}
+
+@media(max-height:730px) and (max-width:760px){
+  .loginFormSide{justify-content:flex-start;padding-top:max(14px,env(safe-area-inset-top));overflow-y:auto}
+  .loginMobileBrand{margin-bottom:18px}
+  .loginWelcome h2{font-size:34px}
+  .loginWelcome>p{font-size:13px}
+  .loginMobileFeatures{margin-top:10px}
+  .loginCard{padding:16px;gap:10px}
+  .loginCard input{min-height:47px!important}
+  .loginSubmit{min-height:49px!important}
+  .loginSecureNote{display:none}
+  .loginMobileOrb{top:72px;transform:translateX(-50%) scale(.82)}
+}
