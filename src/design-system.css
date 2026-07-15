@@ -602,3 +602,142 @@ input:focus,select:focus,textarea:focus,.skuTrigger:focus{border-color:var(--tf2
 }
 .darkTheme .bottomNav{background:rgba(11,25,39,.98)!important;border-color:#263d52!important}
 .darkTheme .bottomNav button{color:#9fb0c1!important}
+
+/* =========================================================
+   V7.2.2 — Login enterprise + estabilidade mobile + SKU
+   ========================================================= */
+.login{
+  min-height:100svh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:clamp(14px,3vw,34px);
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 12% 22%,rgba(56,112,164,.24),transparent 30%),
+    radial-gradient(circle at 88% 72%,rgba(47,115,91,.16),transparent 28%),
+    linear-gradient(135deg,#071a2e 0%,#0b2b49 52%,#0b2238 100%)!important;
+}
+.loginShell{
+  width:min(1120px,100%);
+  min-height:min(720px,calc(100dvh - 48px));
+  display:grid;
+  grid-template-columns:minmax(0,1.12fr) minmax(420px,.88fr);
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.17);
+  border-radius:34px;
+  background:rgba(255,255,255,.07);
+  box-shadow:0 34px 90px rgba(0,0,0,.38);
+  backdrop-filter:blur(16px);
+}
+.loginHero{
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:clamp(34px,5vw,64px);
+  color:#fff;
+  background:
+    linear-gradient(145deg,rgba(31,86,132,.70),rgba(10,42,70,.86)),
+    radial-gradient(circle at 68% 42%,rgba(63,138,105,.24),transparent 34%);
+}
+.loginHero::before{
+  content:"";
+  position:absolute;
+  width:440px;height:440px;
+  right:-120px;top:75px;
+  border:1px solid rgba(116,179,210,.18);
+  border-radius:42% 58% 48% 52%;
+  transform:rotate(32deg);
+  box-shadow:0 0 0 42px rgba(116,179,210,.035),0 0 0 84px rgba(116,179,210,.022);
+}
+.loginHeroGlow{position:absolute;inset:auto -80px -110px auto;width:330px;height:330px;border-radius:50%;background:rgba(63,138,105,.18);filter:blur(36px)}
+.loginHeroContent{position:relative;z-index:1;max-width:620px;margin:auto 0}
+.loginHeroLogo{width:88px;height:88px;object-fit:contain;margin-bottom:24px;filter:drop-shadow(0 14px 28px rgba(0,0,0,.28))}
+.loginEyebrow{display:inline-flex;padding:9px 14px;border:1px solid rgba(213,167,79,.62);border-radius:999px;color:#f3d78e;background:rgba(213,167,79,.08);font-size:13px;font-weight:900;letter-spacing:.02em}
+.loginHero h1{font-size:clamp(38px,5vw,62px);line-height:1.03;margin:25px 0 16px;max-width:650px;letter-spacing:-.035em}
+.loginHero p{max-width:590px;margin:0;color:rgba(238,246,252,.80);font-size:clamp(16px,1.6vw,20px);line-height:1.55}
+.loginOperationalStatus{margin-top:34px;display:flex;align-items:center;gap:10px;width:fit-content;padding:12px 16px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(255,255,255,.08);font-size:13px;font-weight:800;color:#e9f2f8}
+.loginOperationalStatus span{width:10px;height:10px;border-radius:50%;background:#37c878;box-shadow:0 0 0 6px rgba(55,200,120,.15)}
+.loginHero>small{position:relative;z-index:1;color:rgba(255,255,255,.58);font-size:12px;text-align:right}
+.loginFormSide{display:flex;flex-direction:column;justify-content:center;padding:clamp(34px,5vw,64px);background:#f8fafc;color:#0d2740}
+.loginWelcome{margin-bottom:28px}
+.loginAccentLine{height:4px;width:100%;border-radius:999px;background:linear-gradient(90deg,#17456f 0 48%,#d5a74f 48% 72%,#3f8a69 72%);margin-bottom:48px}
+.loginWelcome h2{font-size:clamp(32px,4vw,48px);line-height:1;margin:0 0 12px;letter-spacing:-.03em}
+.loginWelcome>p{margin:0;color:#6a7d90;font-size:17px}
+.loginMobileBrand{display:none}
+.loginCard{display:grid;gap:18px;margin:0;padding:0;background:transparent;border:0;box-shadow:none}
+.loginCard label{display:grid;gap:8px;color:#20364d;font-size:13px;font-weight:900}
+.loginCard input{
+  min-height:58px;
+  padding:15px 17px;
+  border-radius:18px;
+  border:1px solid #cedbe7!important;
+  background:#fff!important;
+  color:#10263d!important;
+  font-size:16px!important;
+  box-shadow:inset 0 1px 0 rgba(15,47,79,.02);
+}
+.loginCard input:focus{border-color:#1f5684!important;box-shadow:0 0 0 4px rgba(31,86,132,.13)!important;outline:0}
+.loginSubmit{width:100%;min-height:58px;margin-top:4px;border-radius:18px!important;background:linear-gradient(180deg,#1f5684,#173d60)!important;box-shadow:0 14px 28px rgba(23,61,96,.20)!important}
+.loginSubmit:disabled{opacity:.72;cursor:wait}
+.loginCard .err{margin:0;background:#fcebec;color:#a63f48;border:1px solid #efc5c9}
+
+/* O input do modal SKU não deve receber o anel global de foco dentro do contêiner. */
+.skuModalSearch{
+  border:2px solid #1f5684!important;
+  box-shadow:0 0 0 1px rgba(31,86,132,.04),0 8px 22px rgba(15,47,79,.07)!important;
+  overflow:hidden;
+  background:#fff!important;
+}
+.skuModalSearch:focus-within{border-color:#1f5684!important;box-shadow:0 0 0 4px rgba(31,86,132,.12)!important}
+.skuModalSearch input,
+.skuModalSearch input:focus,
+.skuModalSearch input:focus-visible{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  background:transparent!important;
+  min-width:0;
+  font-size:16px!important;
+  caret-color:#173d60;
+}
+.skuModalSearch input::-webkit-search-decoration,
+.skuModalSearch input::-webkit-search-cancel-button,
+.skuModalSearch input::-webkit-search-results-button,
+.skuModalSearch input::-webkit-search-results-decoration{-webkit-appearance:none}
+
+@media(max-width:760px){
+  .login{display:block;padding:0;background:linear-gradient(180deg,#071a2e 0,#0b2b49 38%,#eef3f7 38%)!important;overflow-y:auto}
+  .loginShell{display:block;width:100%;min-height:100dvh;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;overflow:visible}
+  .loginHero{display:none}
+  .loginFormSide{min-height:100dvh;justify-content:flex-start;padding:max(28px,env(safe-area-inset-top)) 20px calc(32px + env(safe-area-inset-bottom));background:transparent;color:#0d2740}
+  .loginFormSide::before{content:"";position:absolute;left:0;right:0;top:0;height:38vh;min-height:260px;background:linear-gradient(160deg,#071a2e,#16456d);z-index:0}
+  .loginWelcome,.loginCard{position:relative;z-index:1}
+  .loginWelcome{color:#fff;padding-top:10px;margin-bottom:18px;text-align:center}
+  .loginMobileBrand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:23px;text-align:left}
+  .loginMobileLogo{width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 10px 22px rgba(0,0,0,.25))}
+  .loginMobileBrand b{display:block;font-size:20px;line-height:1.05}
+  .loginMobileBrand span{display:block;color:rgba(255,255,255,.74);font-size:12px;margin-top:5px}
+  .loginAccentLine{width:150px;height:3px;margin:0 auto 22px}
+  .loginWelcome h2{font-size:34px;margin-bottom:8px}
+  .loginWelcome>p{color:rgba(255,255,255,.74);font-size:15px}
+  .loginCard{background:#fff;border:1px solid #d7e2ec;border-radius:26px;padding:22px;box-shadow:0 22px 50px rgba(8,27,46,.20);margin-top:10px}
+  .loginCard input{min-height:54px}
+  .loginSubmit{min-height:54px}
+}
+@media(max-width:390px){
+  .loginFormSide{padding-left:14px;padding-right:14px}
+  .loginCard{padding:18px;border-radius:23px}
+  .loginWelcome h2{font-size:30px}
+}
+
+body.darkTheme .loginFormSide{background:#0d1b2a;color:#f3f7fb}
+body.darkTheme .loginWelcome>p{color:#9fb0c1}
+body.darkTheme .loginCard input{background:#122538!important;color:#f3f7fb!important;border-color:#2a4054!important}
+body.darkTheme .skuModalSearch{background:#0d1b2a!important;border-color:#4d83b1!important}
+body.darkTheme .skuModalSearch input{background:transparent!important;color:#f3f7fb!important}
