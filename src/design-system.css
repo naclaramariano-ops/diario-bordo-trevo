@@ -106,3 +106,189 @@ input:focus, select:focus, textarea:focus, .skuTrigger:focus {
   .primary,.secondary,.drawerAction { min-height:42px; }
   .bottomNav button.active { box-shadow:none !important; }
 }
+
+/* V7.1 Enterprise UI — identidade extraída das quatro pétalas do logo */
+:root {
+  /* Pétalas do logo */
+  --logo-blue-dark: #07578d;
+  --logo-blue-deep: #064775;
+  --logo-blue-light: #74b3d2;
+  --logo-blue-soft: #e8f3f8;
+  --logo-green-dark: #07654b;
+  --logo-green-deep: #05523d;
+  --logo-green-light: #4f9c52;
+  --logo-green-soft: #e9f5ea;
+
+  /* Base neutra enterprise */
+  --brand-navy-950: var(--logo-blue-deep);
+  --brand-navy-800: var(--logo-blue-dark);
+  --brand-blue-700: var(--logo-blue-dark);
+  --brand-blue-500: #4e8eb5;
+  --brand-blue-200: var(--logo-blue-light);
+  --brand-green-900: var(--logo-green-deep);
+  --brand-green-700: var(--logo-green-dark);
+  --brand-green-500: var(--logo-green-light);
+  --brand-green-300: #8bc28e;
+  --brand-bg: #f4f8fa;
+  --brand-surface: #ffffff;
+  --brand-line: #d6e2e8;
+  --brand-ink: #163043;
+  --brand-muted: #667b89;
+
+  --navy: var(--logo-blue-dark);
+  --teal: var(--logo-green-dark);
+  --brand-blue: var(--logo-blue-dark);
+  --brand-blue-soft: var(--logo-blue-soft);
+  --brand-green: var(--logo-green-dark);
+  --brand-green-soft: var(--logo-green-soft);
+  --green: var(--logo-green-dark);
+  --bg: var(--brand-bg);
+  --card: var(--brand-surface);
+  --ink: var(--brand-ink);
+  --muted: var(--brand-muted);
+  --line: var(--brand-line);
+  --shadow: 0 16px 38px rgba(7,87,141,.09);
+  --shadow-sm: 0 7px 20px rgba(7,87,141,.065);
+}
+
+/* Marca e ações principais */
+.primary {
+  background: var(--logo-blue-dark) !important;
+  border-color: var(--logo-blue-dark) !important;
+  box-shadow: 0 8px 17px rgba(7,87,141,.17) !important;
+}
+.primary:hover { background: var(--logo-blue-deep) !important; }
+.secondary { color: var(--logo-blue-dark); }
+.secondary:hover { border-color: var(--logo-blue-light); background: #f3f9fc; }
+input:focus, select:focus, textarea:focus, .skuTrigger:focus {
+  border-color: var(--logo-blue-dark) !important;
+  box-shadow: 0 0 0 3px rgba(116,179,210,.28) !important;
+}
+.login {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(116,179,210,.24), transparent 34%),
+    linear-gradient(145deg, var(--logo-blue-deep), var(--logo-blue-dark)) !important;
+}
+
+/* Navegação branca: identidade visível sem pesar a tela */
+.bottomNav {
+  background: rgba(255,255,255,.97) !important;
+  border-top-color: #d7e5eb !important;
+  box-shadow: 0 -8px 28px rgba(7,71,117,.07);
+}
+.bottomNav button {
+  position: relative;
+  background: transparent !important;
+  color: #708491 !important;
+  border: 1px solid transparent;
+}
+.bottomNav button.active {
+  background: var(--logo-blue-soft) !important;
+  color: var(--logo-blue-dark) !important;
+  border-color: #c7e1ed !important;
+  box-shadow: none !important;
+}
+.bottomNav button.active::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: var(--logo-green-dark);
+}
+
+/* Seletores: branco no repouso e preenchimento apenas quando selecionado */
+.machineScroller button.active,
+.choiceButtons button.selected {
+  background: var(--logo-blue-dark) !important;
+  border-color: var(--logo-blue-dark) !important;
+  color: #fff !important;
+}
+.areaCards div {
+  background: var(--logo-blue-dark) !important;
+  box-shadow: 0 10px 24px rgba(7,87,141,.13);
+}
+.progressTrack i { background: var(--logo-green-dark) !important; }
+
+/* Indicadores e filtros mais leves */
+.stat {
+  background: #fff !important;
+  border-color: #d5e4eb !important;
+}
+.stat b { color: var(--logo-blue-dark); }
+.statsGrid .stat.active,
+.stat.active {
+  background: var(--logo-blue-dark) !important;
+  border-color: var(--logo-blue-dark) !important;
+  color: #fff !important;
+}
+.statsGrid .stat.active b,
+.statsGrid .stat.active span,
+.stat.active b,
+.stat.active span { color: #fff !important; }
+
+/* Avatar e perfil usam a combinação das pétalas sem verde genérico */
+.avatarFallback, .avatar {
+  background: linear-gradient(145deg, var(--logo-blue-dark), var(--logo-green-dark)) !important;
+}
+.userAvatarButton { border-color: #c7e1ed; }
+.drawerUserAvatar { border-color: var(--logo-blue-soft); }
+.photoAction {
+  background: var(--logo-blue-soft);
+  color: var(--logo-blue-dark);
+  border-color: #c7e1ed;
+}
+
+/* Ações positivas usam o verde escuro exato do logo */
+.quickFill {
+  background: var(--logo-green-soft);
+  color: var(--logo-green-deep);
+}
+.ok,.badgeOk,.quickBadge.done,.opPill.conforme {
+  background: var(--logo-green-soft) !important;
+  color: var(--logo-green-deep) !important;
+}
+.cipNotice {
+  background: var(--logo-green-soft);
+  color: var(--logo-green-deep);
+  border-color: #bcdcbc;
+}
+
+/* Cards e superfícies */
+.card,.quickTopCard,.quickFormCard,.stat,.userRow,.profileDrawer,.checkoutModal {
+  border-color: #d6e2e8 !important;
+  box-shadow: var(--shadow-sm);
+}
+.editBanner,.myDraftsPanel {
+  background: var(--logo-blue-soft) !important;
+  border-color: #c7e1ed !important;
+}
+.myDraftCard:hover,.myDraftCard:focus {
+  border-color: var(--logo-blue-light);
+  background: #f4fafd;
+}
+
+/* Tema escuro preserva as cores do logo com contraste adequado */
+.darkTheme {
+  --bg: #0e1b25;
+  --card: #142735;
+  --surface: #142735;
+  --soft: #193141;
+  --line: #2c4758;
+  --ink: #edf6fa;
+  --muted: #a9bdc8;
+}
+.darkTheme .primary {
+  background: var(--logo-blue-light) !important;
+  border-color: var(--logo-blue-light) !important;
+  color: #073b61 !important;
+}
+.darkTheme .bottomNav { background: rgba(14,27,37,.98) !important; border-top-color: #294454 !important; }
+.darkTheme .bottomNav button { color: #9bb0bd !important; }
+.darkTheme .bottomNav button.active {
+  background: #17394d !important;
+  color: #9ed1e8 !important;
+  border-color: #31576b !important;
+}
