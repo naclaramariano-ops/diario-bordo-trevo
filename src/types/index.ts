@@ -1,6 +1,6 @@
 export type Perfil='administrador'|'usuario';
 export type StatusSync='sincronizado'|'pendente'|'offline';
-export interface Usuario{ id:string; nome:string; usuario:string; setor:string; cargo:string; perfil:Perfil; ativo:boolean; trocar_senha:boolean; foto_url?:string; criado_em?:string; atualizado_em?:string }
+export interface Usuario{ id:string; nome:string; usuario:string; email?:string; setor:string; cargo:string; perfil:Perfil; ativo:boolean; trocar_senha:boolean; foto_url?:string; criado_em?:string; atualizado_em?:string }
 export interface Setor{ id:string; nome:string; tipo?:string; ativo:boolean; criado_em?:string; atualizado_em?:string }
 export interface Maquina{ id:string; setor_id:string; nome:string; codigo?:string; ordem?:number; ativo:boolean; criado_em?:string; atualizado_em?:string }
 export interface Turno{ id:string; nome:string; inicio:string; fim:string; ativo:boolean; criado_em?:string; atualizado_em?:string }

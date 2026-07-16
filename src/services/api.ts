@@ -57,7 +57,7 @@ async function deleteOnlineOrQueue(tabela:string,id:string,cacheStore:string,str
   await del(cacheStore,id);
 }
 
-export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
+export const listUsuarios=()=>cacheList<Usuario>('usuarios_cache',async()=>{const {data,error}=await supabase.from('usuarios').select('id,nome,usuario,email,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em').order('nome');if(error)throw error;return data||[]},true);
 const DEFAULT_USER_PASSWORD_HASH='8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92'; // senha provisória: 123456
 export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
   const me=currentUser();
@@ -77,7 +77,7 @@ export async function saveUsuario(input:Partial<Usuario>&{senha?:string}){
       .from('usuarios')
       .update(patch)
       .eq('id',me.id)
-      .select('id,nome,usuario,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em')
+      .select('id,nome,usuario,email,setor,cargo,perfil,ativo,trocar_senha,foto_url,criado_em,atualizado_em')
       .single();
     if(error) throw error;
     const saved={...me,...data} as Usuario;
@@ -131,9 +131,26 @@ export async function saveDiarioDraft(input:Partial<Diario>){
   const me=currentUser(); if(!me) throw new Error('Sessão expirada');
   const now=new Date().toISOString();
   const row:any={...input,id:input.id||uid(),status:'Em preenchimento',criado_por:input.criado_por||me.id,lider_id:input.lider_id||me.id,lider_nome:input.lider_nome||me.nome,criado_em:input.criado_em||now,atualizado_em:now,editado:false};
-  // Quando online, a posse da combinação Data + Turno + Área precisa ser confirmada pelo servidor.
-  // Assim evitamos dois responsáveis preenchendo a mesma passagem ao mesmo tempo.
-  return upsertOnlineOrQueue('diarios',row,'diarios_cache',supabaseConfigured&&navigator.onLine);
+  if(supabaseConfigured&&navigator.onLine){
+    const {data,error}=await supabase.rpc('claim_diario_draft_v10_1',{
+      p_id:row.id,p_data:row.data,p_turno:row.turno,p_setor_nome:row.setor_nome,
+      p_lider_id:row.lider_id,p_lider_nome:row.lider_nome,p_criado_por:row.criado_por,
+      p_resumo:row.resumo,p_criado_em:row.criado_em
+    });
+    if(error){
+      const message=error.message||'Não foi possível reservar a passagem.';
+      if(message.includes('PASSAGEM_EM_USO')) throw new Error('Esta passagem já está sendo preenchida por outro usuário.');
+      throw error;
+    }
+    const saved=(Array.isArray(data)?data[0]:data)||row;
+    saved.sync_status='sincronizado';
+    await put('diarios_cache',saved);
+    return saved as Diario;
+  }
+  await enqueueSync({tabela:'diarios',operacao:'upsert',payload:row});
+  row.sync_status='pendente';
+  await put('diarios_cache',row);
+  return row as Diario;
 }
 export async function assumeDiarioDraft(input:Diario){
   const me=ensureAdmin();
