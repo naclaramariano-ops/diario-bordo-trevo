@@ -127,3 +127,7 @@ input:focus,select:focus,textarea:focus{border-color:#176b8a;box-shadow:0 0 0 4p
 .darkTheme .userAvatarButton{background:#111827;border-color:#2a4a5c}
 @media(max-width:600px){.topbar{gap:8px}.miniLogoImg{width:40px;height:40px}.userAvatarButton{width:42px;height:42px}.topbarActions .pill{padding:6px 8px}.appIdentity b{max-width:190px}.drawerUserAvatar{width:68px;height:68px}}
 @media(max-width:390px){.topbarActions{gap:6px}.topbarActions .pill{font-size:0;padding:7px}.topbarActions .pill svg{width:16px;height:16px}.appIdentity b{max-width:170px}.appIdentity span{max-width:170px}}
+
+/* Enterprise V11.1 — bloqueio somente ao iniciar um lançamento duplicado */
+.duplicateFinalWarning{margin:12px 0 16px;padding:16px 18px;border:1px solid #e4b84f;background:#fff8e8;border-radius:18px;color:#5f4705;display:grid;gap:5px;box-shadow:0 8px 22px rgba(8,27,46,.06)}
+.duplicateFinalWarning b{font-size:1rem;color:#3f3108}.duplicateFinalWarning span{font-weight:750}.duplicateFinalWarning p{margin:3px 0 0;line-height:1.45;color:#6d5b2c}

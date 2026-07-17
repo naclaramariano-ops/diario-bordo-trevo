@@ -127,18 +127,24 @@ export async function deleteTurno(id:string){requireOnlineAdmin(); await deleteO
 export const listAudit=()=>cacheList<AuditLog>('audit_cache',async()=>{const {data,error}=await supabase.from('audit_logs').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {data,error}=await supabase.from('diarios').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 
-export async function findExistingDiario(data:string,turno:string,setorNome:string,excludeId?:string){
-  const normalize=(value?:string)=>String(value||'').trim().toLowerCase();
-  let rows:Diario[]=[];
+export async function findOfficialDiario(data:string,turno:string,setor_nome:string,excludeId?:string){
+  const normalized=(v:string)=>String(v||'').trim().toLowerCase();
   if(supabaseConfigured&&navigator.onLine){
-    const {data:server,error}=await supabase.from('diarios').select('*').eq('data',data).limit(50);
-    if(error) throw error;
-    rows=(server||[]) as Diario[];
-  }else rows=await getAll<Diario>('diarios_cache');
-  return rows
-    .filter(d=>d.id!==excludeId&&d.data===data&&normalize(d.turno)===normalize(turno)&&normalize(d.setor_nome)===normalize(setorNome))
-    .filter(d=>['em preenchimento','finalizado','finalizada'].includes(normalize(d.status)))
-    .sort((a,b)=>new Date(b.atualizado_em||b.criado_em).getTime()-new Date(a.atualizado_em||a.criado_em).getTime())[0]||null;
+    let query=supabase.from('diarios').select('*')
+      .eq('data',data)
+      .ilike('turno',turno)
+      .ilike('setor_nome',setor_nome)
+      .in('status',['Finalizado','Finalizada','finalizado','finalizada'])
+      .order('finalizada_em',{ascending:false,nullsFirst:false})
+      .order('atualizado_em',{ascending:false,nullsFirst:false})
+      .limit(1);
+    if(excludeId)query=query.neq('id',excludeId);
+    const{data:rows,error}=await query;
+    if(error)throw error;
+    return (rows?.[0]||null) as Diario|null;
+  }
+  const cached=await getAll<Diario>('diarios_cache');
+  return cached.find(d=>d.id!==excludeId&&d.data===data&&normalized(d.turno)===normalized(turno)&&normalized(d.setor_nome||'')===normalized(setor_nome)&&['finalizado','finalizada'].includes(normalized(d.status)))||null;
 }
 
 export async function saveDiarioDraft(input:Partial<Diario>){
@@ -154,6 +160,7 @@ export async function saveDiarioDraft(input:Partial<Diario>){
     if(error){
       const message=error.message||'Não foi possível reservar a passagem.';
       if(message.includes('PASSAGEM_EM_USO')) throw new Error('Esta passagem já está sendo preenchida por outro usuário.');
+      if(message.includes('PASSAGEM_JA_FINALIZADA')) throw new Error('Esta passagem já foi finalizada. Abra o registro existente em Hoje ou Histórico.');
       throw error;
     }
     const saved=(Array.isArray(data)?data[0]:data)||row;
@@ -206,14 +213,13 @@ export async function saveDiario(input:Partial<Diario>){
   const now=new Date().toISOString(); const existing=input.id;
   const row:any={...input,id:input.id||uid(),criado_por:input.criado_por||me.id,criado_em:input.criado_em||now,atualizado_em:now};
   if(existing){row.editado=true;row.ultima_edicao_por=me.nome;row.ultima_edicao_em=now}
-
-  const finalized=['finalizado','finalizada'].includes(String(row.status||'').trim().toLowerCase());
-  let saved:any=row;
-  if(finalized&&supabaseConfigured&&navigator.onLine){
-    const {data,error}=await supabase.rpc('save_diario_final_v11',{p_payload:row});
+  const isFinal=['finalizado','finalizada'].includes(String(row.status||'').trim().toLowerCase());
+  let saved:any;
+  if(isFinal&&supabaseConfigured&&navigator.onLine){
+    const{data,error}=await supabase.rpc('save_diario_final_v11_1',{p_payload:row});
     if(error){
-      const message=error.message||'Não foi possível salvar a passagem.';
-      if(message.includes('PASSAGEM_JA_EXISTE')) throw new Error('Já existe uma passagem para esta data, turno e envase. Abra o lançamento existente para visualizar ou editar.');
+      const message=error.message||'Não foi possível finalizar a passagem.';
+      if(message.includes('PASSAGEM_JA_EXISTE')) throw new Error('Já existe uma passagem finalizada para esta data, turno e envase. O registro existente não foi sobrescrito.');
       throw error;
     }
     saved=(Array.isArray(data)?data[0]:data)||row;
@@ -235,42 +241,6 @@ async function processQueueItem(item:any){
   const payload=item.payload;
   if(!payload?.id) throw new Error('Item de sincronização sem payload/id.');
 
-  if(tabela==='diarios'){
-    const status=String(payload.status||'').trim().toLowerCase();
-    if(status==='em preenchimento'){
-      const {data,error}=await supabase.rpc('claim_diario_draft_v10_1',{
-        p_id:payload.id,p_data:payload.data,p_turno:payload.turno,p_setor_nome:payload.setor_nome,
-        p_lider_id:payload.lider_id,p_lider_nome:payload.lider_nome,p_criado_por:payload.criado_por,
-        p_resumo:payload.resumo,p_criado_em:payload.criado_em
-      });
-      if(error){
-        if((error.message||'').includes('PASSAGEM_EM_USO')){
-          await registerConflict({tabela,registro_id:payload.id,tipo:'passagem_em_uso',payload,erro:error.message});
-          await put('diarios_cache',{...payload,status:'Conflito de sincronização',sync_status:'pendente',atualizado_em:new Date().toISOString()});
-          return;
-        }
-        throw error;
-      }
-      const saved=(Array.isArray(data)?data[0]:data)||payload;
-      await put('diarios_cache',{...saved,sync_status:'sincronizado'});
-      return;
-    }
-    if(['finalizado','finalizada'].includes(status)){
-      const {data,error}=await supabase.rpc('save_diario_final_v11',{p_payload:payload});
-      if(error){
-        if((error.message||'').includes('PASSAGEM_JA_EXISTE')){
-          await registerConflict({tabela,registro_id:payload.id,tipo:'passagem_duplicada',payload,erro:error.message});
-          await put('diarios_cache',{...payload,status:'Conflito de sincronização',sync_status:'pendente',atualizado_em:new Date().toISOString()});
-          return;
-        }
-        throw error;
-      }
-      const saved=(Array.isArray(data)?data[0]:data)||payload;
-      await put('diarios_cache',{...saved,sync_status:'sincronizado'});
-      return;
-    }
-  }
-
   // Conflito simples: se o servidor tiver atualizado_em mais recente que o payload local, registra conflito.
   try{
     const {data:server}=await supabase.from(tabela).select('id,atualizado_em').eq('id',payload.id).maybeSingle();
@@ -281,6 +251,17 @@ async function processQueueItem(item:any){
     }
   }catch(e){console.warn('conflict check skipped',e)}
 
+  if(tabela==='diarios'&&['finalizado','finalizada'].includes(String(payload.status||'').trim().toLowerCase())){
+    const{error}=await supabase.rpc('save_diario_final_v11_1',{p_payload:payload});
+    if(error){
+      if(String(error.message||'').includes('PASSAGEM_JA_EXISTE')){
+        await registerConflict({tabela,registro_id:payload.id,tipo:'passagem_duplicada',payload,motivo:'Já existe passagem oficial para a mesma data, turno e envase.'});
+        return;
+      }
+      throw error;
+    }
+    return;
+  }
   const {error}=await supabase.from(tabela).upsert(payload,{onConflict:'id'});
   if(error) throw error;
 }
