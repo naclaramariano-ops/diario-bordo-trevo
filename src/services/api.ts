@@ -2,7 +2,7 @@ import { supabase, supabaseConfigured } from './supabase';
 import { currentUser } from './auth';
 import { sha256, uid } from '../utils/security';
 import type { Usuario, Setor, Maquina, Diario, Turno, AuditLog } from '../types';
-import { clear, del, enqueueSync, getAll, put, registerConflict } from './localDb';
+import { clear, del, enqueueSync, getAll, put, putMeta, registerConflict } from './localDb';
 
 async function cacheList<T>(store:string, online:()=>Promise<T[]>, authoritative=false){
   if(supabaseConfigured&&navigator.onLine){
@@ -325,5 +325,7 @@ export async function syncPending(){
       await put('sync_queue',{...item,tentativas:(item.tentativas||0)+1,ultimo_erro:e?.message||String(e),atualizado_em:new Date().toISOString()});
     }
   }
+  await putMeta('last_sync_at',new Date().toISOString());
+  window.dispatchEvent(new CustomEvent('dbt:sync-queue-changed'));
   return ok;
 }

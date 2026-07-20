@@ -149,6 +149,7 @@ export async function enqueueSync(item: {
     atualizado_em: new Date().toISOString(),
   };
   await put('sync_queue', row);
+  window.dispatchEvent(new CustomEvent('dbt:sync-queue-changed'));
   return row;
 }
 
