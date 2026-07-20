@@ -127,6 +127,18 @@ export async function deleteTurno(id:string){requireOnlineAdmin(); await deleteO
 export const listAudit=()=>cacheList<AuditLog>('audit_cache',async()=>{const {data,error}=await supabase.from('audit_logs').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 export const listDiarios=()=>cacheList<Diario>('diarios_cache',async()=>{const {data,error}=await supabase.from('diarios').select('*').order('criado_em',{ascending:false}).limit(200);if(error)throw error;return data||[]});
 
+async function registerServerDiarioConflict(payload:any){
+  if(!supabaseConfigured||!navigator.onLine)return;
+  const me=currentUser();
+  try{
+    await supabase.rpc('register_diario_sync_conflict_v11_2',{p_payload:{
+      ...payload,
+      detected_by:me?.id||null,
+      detected_by_name:me?.nome||'Sistema'
+    }});
+  }catch(e){console.warn('Não foi possível registrar o conflito no servidor',e)}
+}
+
 export async function findOfficialDiario(data:string,turno:string,setor_nome:string,excludeId?:string){
   const normalized=(v:string)=>String(v||'').trim().toLowerCase();
   if(supabaseConfigured&&navigator.onLine){
@@ -152,7 +164,7 @@ export async function saveDiarioDraft(input:Partial<Diario>){
   const now=new Date().toISOString();
   const row:any={...input,id:input.id||uid(),status:'Em preenchimento',criado_por:input.criado_por||me.id,lider_id:input.lider_id||me.id,lider_nome:input.lider_nome||me.nome,criado_em:input.criado_em||now,atualizado_em:now,editado:false};
   if(supabaseConfigured&&navigator.onLine){
-    const {data,error}=await supabase.rpc('claim_diario_draft_v10_1',{
+    const {data,error}=await supabase.rpc('claim_diario_draft_v11_2',{
       p_id:row.id,p_data:row.data,p_turno:row.turno,p_setor_nome:row.setor_nome,
       p_lider_id:row.lider_id,p_lider_nome:row.lider_nome,p_criado_por:row.criado_por,
       p_resumo:row.resumo,p_criado_em:row.criado_em
@@ -216,10 +228,17 @@ export async function saveDiario(input:Partial<Diario>){
   const isFinal=['finalizado','finalizada'].includes(String(row.status||'').trim().toLowerCase());
   let saved:any;
   if(isFinal&&supabaseConfigured&&navigator.onLine){
-    const{data,error}=await supabase.rpc('save_diario_final_v11_1',{p_payload:row});
+    const{data,error}=await supabase.rpc('save_diario_final_v11_2',{p_payload:row});
     if(error){
       const message=error.message||'Não foi possível finalizar a passagem.';
-      if(message.includes('PASSAGEM_JA_EXISTE')) throw new Error('Já existe uma passagem finalizada para esta data, turno e envase. O registro existente não foi sobrescrito.');
+      if(message.includes('PASSAGEM_JA_EXISTE')){
+        await registerServerDiarioConflict({diario_id:row.id,conflict_type:'passagem_duplicada',conflict_key:`${row.data}|${row.turno}|${row.setor_nome||''}`,local_payload:row});
+        throw new Error('Já existe uma passagem finalizada para esta data, turno e envase. O registro existente não foi sobrescrito.');
+      }
+      if(message.includes('CONFLITO_VERSAO')){
+        await registerServerDiarioConflict({diario_id:row.id,conflict_type:'versao_desatualizada',conflict_key:`${row.data}|${row.turno}|${row.setor_nome||''}`,local_payload:row});
+        throw new Error('Esta passagem foi alterada em outro dispositivo. Atualize a tela antes de salvar novamente.');
+      }
       throw error;
     }
     saved=(Array.isArray(data)?data[0]:data)||row;
@@ -251,16 +270,42 @@ async function processQueueItem(item:any){
     }
   }catch(e){console.warn('conflict check skipped',e)}
 
-  if(tabela==='diarios'&&['finalizado','finalizada'].includes(String(payload.status||'').trim().toLowerCase())){
-    const{error}=await supabase.rpc('save_diario_final_v11_1',{p_payload:payload});
-    if(error){
-      if(String(error.message||'').includes('PASSAGEM_JA_EXISTE')){
-        await registerConflict({tabela,registro_id:payload.id,tipo:'passagem_duplicada',payload,motivo:'Já existe passagem oficial para a mesma data, turno e envase.'});
-        return;
+  if(tabela==='diarios'){
+    const status=String(payload.status||'').trim().toLowerCase();
+    const conflictKey=`${payload.data||''}|${payload.turno||''}|${payload.setor_nome||''}`;
+    if(['finalizado','finalizada'].includes(status)){
+      const{error}=await supabase.rpc('save_diario_final_v11_2',{p_payload:payload});
+      if(error){
+        const msg=String(error.message||'');
+        if(msg.includes('PASSAGEM_JA_EXISTE')||msg.includes('CONFLITO_VERSAO')){
+          const tipo=msg.includes('CONFLITO_VERSAO')?'versao_desatualizada':'passagem_duplicada';
+          const motivo=tipo==='versao_desatualizada'?'O servidor possui uma versão mais recente da passagem.':'Já existe passagem oficial para a mesma data, turno e envase.';
+          await registerConflict({tabela,registro_id:payload.id,tipo,payload,motivo});
+          await registerServerDiarioConflict({diario_id:payload.id,conflict_type:tipo,conflict_key:conflictKey,local_payload:payload});
+          return;
+        }
+        throw error;
       }
-      throw error;
+      return;
     }
-    return;
+    if(['rascunho','em preenchimento'].includes(status)){
+      const{error}=await supabase.rpc('claim_diario_draft_v11_2',{
+        p_id:payload.id,p_data:payload.data,p_turno:payload.turno,p_setor_nome:payload.setor_nome,
+        p_lider_id:payload.lider_id,p_lider_nome:payload.lider_nome,p_criado_por:payload.criado_por,
+        p_resumo:payload.resumo,p_criado_em:payload.criado_em
+      });
+      if(error){
+        const msg=String(error.message||'');
+        if(msg.includes('PASSAGEM_EM_USO')||msg.includes('PASSAGEM_JA_FINALIZADA')){
+          const tipo=msg.includes('PASSAGEM_JA_FINALIZADA')?'passagem_ja_finalizada':'passagem_em_uso';
+          await registerConflict({tabela,registro_id:payload.id,tipo,payload,motivo:'O rascunho offline não foi enviado porque a combinação já está ocupada no servidor.'});
+          await registerServerDiarioConflict({diario_id:payload.id,conflict_type:tipo,conflict_key:conflictKey,local_payload:payload});
+          return;
+        }
+        throw error;
+      }
+      return;
+    }
   }
   const {error}=await supabase.from(tabela).upsert(payload,{onConflict:'id'});
   if(error) throw error;
